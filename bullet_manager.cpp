@@ -144,7 +144,7 @@ void BulletManager::_draw_bullet_type(BulletManagerBulletType* type, int &offset
 	draw_texture_rect_region(type->texture, type->_cached_dst_rect, type->_cached_src_rect, Color(1, 1, 1), false);
 	offset_y += type->_cached_dst_rect.size.y + 2;
 }
-void BulletManager::add_bullet(StringName type_name, Vector2 position, Vector2 direction,real_t speed, real_t acceleration) {
+BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 position, Vector2 direction,real_t speed, real_t acceleration) {
     BulletManagerBullet* bullet(memnew(BulletManagerBullet));
 
 	BulletManagerBulletType* type = types[type_name];
@@ -170,6 +170,7 @@ void BulletManager::add_bullet(StringName type_name, Vector2 position, Vector2 d
 	}
 	bullet->area = area;
 	bullets.push_back(bullet);
+	return bullet;
 }
 
 void BulletManager::_register_bullet_types() {
