@@ -12,10 +12,15 @@ class BulletManagerBulletType : public Node {
 	GDCLASS(BulletManagerBulletType, Node)
 	
 	Ref<Texture> texture;
+	Ref<Texture> normal_map;
 	int vframes = 1;
 	int hframes = 1;
 	int frame = 0;
-	bool is_rotating_visual = false;
+	bool centered = false;
+	Point2 offset;
+	bool region = false ;
+	Rect2 region_rect;
+	bool rotate_visual = false;
 	Ref<Shape2D> collision_shape;
 	uint32_t collision_mask = 0;
 	uint32_t collision_layer = 0;
@@ -34,14 +39,24 @@ public:
 
 	void set_texture(const Ref<Texture> &p_texture);
 	Ref<Texture> get_texture() const;
+	void set_normal_map(const Ref<Texture> &p_normal_map);
+	Ref<Texture> get_normal_map() const;
 	void set_vframes(int p_amount);
 	int get_vframes() const;
 	void set_hframes(int p_amount);
 	int get_hframes() const;
 	void set_frame(int frame);
 	int get_frame() const;
-	void set_is_rotating_visual(bool is_rotating_visual);
-	bool get_is_rotating_visual() const;
+	void set_centered(bool p_center);
+	bool is_centered() const;
+	void set_offset(const Point2 &p_offset);
+	Point2 get_offset() const;
+	void set_region(bool p_region);
+	bool is_region() const;
+	void set_region_rect(const Rect2 &p_region_rec);
+	Rect2 get_region_rect() const;
+	void set_rotate_visual(bool p_rotate_visual);
+	bool is_rotating_visual() const;
     void set_collision_mask(uint32_t p_mask);
 	uint32_t get_collision_mask() const;
 	void set_collision_layer(uint32_t p_layer);

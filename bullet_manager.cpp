@@ -101,14 +101,13 @@ void BulletManager::_draw_bullets() {
 		//Bullet* bullet = r[i];
 		BulletManagerBullet* bullet = E->get();
 		BulletManagerBulletType* type = bullet->type;
-		if (type->is_rotating_visual) {
+		if (type->rotate_visual) {
 			draw_set_transform(bullet->matrix.get_origin(), bullet->direction.angle() + (Math_PI * -0.5), bullet->matrix.get_scale());
-			
 		}
 		else {
 			draw_set_transform_matrix(bullet->matrix);
 		}
-		draw_texture_rect_region(type->texture, type->_cached_dst_rect, type->_cached_src_rect, Color(1, 1, 1), false);
+		draw_texture_rect_region(type->texture, type->_cached_dst_rect, type->_cached_src_rect, Color(1, 1, 1), false, type->normal_map);
 		E = E->next();
 	}
 	
