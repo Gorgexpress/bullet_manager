@@ -20,7 +20,12 @@ void BulletManager::_notification(int p_what) {
 			VS::get_singleton()->canvas_item_set_z_index(get_canvas_item(), z_index);
 		} break;
 		case NOTIFICATION_DRAW: {
-			_draw_bullets();
+			if (Engine::get_singleton()->is_editor_hint()) {
+				_draw_editor_hint();
+			}
+			else {
+				_draw_bullets();
+			}
 		} break;
 
 		case NOTIFICATION_PROCESS: {
@@ -108,6 +113,36 @@ void BulletManager::_draw_bullets() {
 	}
 	
 	
+}
+
+//Draw all the bullet types.
+void BulletManager::_draw_editor_hint() {
+	if (types.empty()) {
+		return;
+	}
+	int offset_y = 0;
+	for (int i = 0; i < get_child_count(); i++) {
+
+		Node *child = get_child(i);
+
+		if (!Object::cast_to<BulletManagerBulletType>(child)) {
+			continue;
+		}
+		BulletManagerBulletType* type = Object::cast_to<BulletManagerBulletType>(child);
+		_draw_bullet_type(type, offset_y);
+	}
+
+}
+
+void BulletManager::_draw_bullet_type(BulletManagerBulletType* type, int &offset_y) {
+	if (type->texture.is_null()) {
+		return;
+	}
+	type->_update_cached_rects();
+	offset_y -= MIN(type->_cached_dst_rect.position.y, 0);
+	draw_set_transform(Point2(0, offset_y), 0, Size2(1, 1));
+	draw_texture_rect_region(type->texture, type->_cached_dst_rect, type->_cached_src_rect, Color(1, 1, 1), false);
+	offset_y += type->_cached_dst_rect.size.y + 2;
 }
 void BulletManager::add_bullet(StringName type_name, Vector2 position, Vector2 direction,real_t speed, real_t acceleration) {
     BulletManagerBullet* bullet(memnew(BulletManagerBullet));

@@ -26,6 +26,8 @@ class BulletManager : public CanvasItem {
 	int get_z_index() const;
 	void _update_bullets();
 	void _draw_bullets();
+	void _draw_editor_hint();
+	void _draw_bullet_type(BulletManagerBulletType* type, int &offset_y);
 	void _register_bullet_types();
 	void _get_visible_rect(Rect2 &rect);
 
