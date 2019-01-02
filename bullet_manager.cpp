@@ -144,7 +144,17 @@ void BulletManager::_draw_bullet_type(BulletManagerBulletType* type, int &offset
 	offset_y -= MIN(type->_cached_dst_rect.position.y, 0);
 	draw_set_transform(Point2(0, offset_y), 0, Size2(1, 1));
 	draw_texture_rect_region(type->texture, type->_cached_dst_rect, type->_cached_src_rect, Color(1, 1, 1), false);
-	offset_y += type->_cached_dst_rect.size.y + 2;
+	real_t start_x = type->_cached_dst_rect.position.x;
+	real_t start_y = type->_cached_dst_rect.position.y;
+	real_t half_x = type->_cached_dst_rect.position.x + type->_cached_dst_rect.size.x / 2.0;
+	real_t half_y = type->_cached_dst_rect.position.y + type->_cached_dst_rect.size.y / 2.0;
+	real_t end_x = type->_cached_dst_rect.position.x + type->_cached_dst_rect.size.x;
+	real_t end_y = type->_cached_dst_rect.position.y + type->_cached_dst_rect.size.y;
+	Color debug_color = Color(0.0, 0.0, 0.0, 0.25);
+	draw_line(Point2(start_x, half_y), Point2(end_x, half_y), debug_color);
+	draw_line(Point2(half_x, start_y), Point2(half_x, end_y), debug_color);
+	draw_rect(type->_cached_dst_rect, debug_color, false);
+	offset_y += type->_cached_dst_rect.size.y + 2 + 1;
 }
 BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 position, Vector2 direction,real_t speed, real_t acceleration) {
     BulletManagerBullet* bullet(memnew(BulletManagerBullet));
