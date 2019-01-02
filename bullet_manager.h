@@ -15,6 +15,7 @@ class BulletManager : public CanvasItem {
 	GDCLASS(BulletManager, CanvasItem)
 	
 	int z_index = 0;
+	real_t bounds_margin = 300.0;
 	//A linked list allows constant time deletion in the middle of a list, without changing the order of the elements.
 	List<BulletManagerBullet*> bullets; 
 	Map<StringName, BulletManagerBulletType*> types;
@@ -24,6 +25,8 @@ class BulletManager : public CanvasItem {
 
 	void set_z_index(int z_index);
 	int get_z_index() const;
+	void set_bounds_margin(float p_bounds_margin);
+	float get_bounds_margin() const;
 	void _update_bullets();
 	void _draw_bullets();
 	void _draw_editor_hint();
