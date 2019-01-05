@@ -35,59 +35,76 @@ void BulletManager::_notification(int p_what) {
 		} break; 
 	}
 }
-void BulletManager::_bind_methods() {
 
+BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 position, Vector2 direction,real_t speed, real_t acceleration) {
+    BulletManagerBullet* bullet(memnew(BulletManagerBullet));
 
-	
-	ClassDB::bind_method(D_METHOD("add_bullet", "position", "direction","speed", "acceleration", "rotation"), &BulletManager::add_bullet);
-	ClassDB::bind_method(D_METHOD("clear"), &BulletManager::clear);
-
-	ClassDB::bind_method(D_METHOD("set_z_index", "z_index"), &BulletManager::set_z_index);
-	ClassDB::bind_method(D_METHOD("get_z_index"), &BulletManager::get_z_index);
-	ClassDB::bind_method(D_METHOD("set_bounds_margin", "bounds_margin"), &BulletManager::set_bounds_margin);
-	ClassDB::bind_method(D_METHOD("get_bounds_margin"), &BulletManager::get_bounds_margin);
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "z_index", PROPERTY_HINT_RANGE, itos(VS::CANVAS_ITEM_Z_MIN) + "," + itos(VS::CANVAS_ITEM_Z_MAX) + ",1"), "set_z_index", "get_z_index");
-	ADD_PROPERTY(PropertyInfo(Variant::REAL, "bounds_margin", PROPERTY_HINT_NONE), "set_bounds_margin", "get_bounds_margin");
-}
-
-
-void BulletManager::_update_bullets() {
-	
+	BulletManagerBulletType* type = types[type_name];
+	bullet->direction = direction;
+	bullet->speed = speed;
+	bullet->acceleration = acceleration;
+	bullet->matrix.elements[2] = position;
+	bullet->type = type;
 	Physics2DServer *ps = Physics2DServer::get_singleton();
-	float delta = get_physics_process_delta_time();
-	int size = bullets.size();
-	Rect2 visible_rect;
-	_get_visible_rect(visible_rect);
-	visible_rect.grow(bounds_margin);
-	{
-		//PoolVector<Bullet*>::Read r = bullets.read();
-		//PoolVector<Bullet*>::Write w = bullets.write();
-		//int i = 0;
-		List<BulletManagerBullet*>::Element *E = bullets.front();
-		//while (i < size) {
-		while(E) {
-			BulletManagerBullet* bullet = E->get();
-			if(bullet->is_queued_for_deletion || !visible_rect.has_point(bullet->matrix.get_origin())) {
-				ps->free(bullet->area);
-				//w[i] = r[size - 1];
-				E->erase();
-				memdelete(bullet);
-				//size -= 1;
-			}
-			else {
-				bullet->matrix[2] += bullet->direction * bullet->speed  * delta;
-				bullet->speed += bullet->acceleration * delta;
-				ps->area_set_transform(bullet->area, bullet->matrix);
-			}
-			//i += 1;
-			E = E->next();
-		}
+	RID area = ps->area_create();
+	ps->area_attach_object_instance_id(area, bullet->get_instance_id());
+	ps->area_set_collision_layer(area, type->collision_layer);
+	ps->area_set_collision_mask(area, type->collision_mask);
+	ps->area_set_monitor_callback(area, bullet, _body_inout_name);
+	ps->area_set_area_monitor_callback(area, bullet, _area_inout_name);
+	ps->area_set_transform(area, bullet->matrix);
+	ps->area_add_shape(area, type->collision_shape->get_rid());
+	
+
+	if (is_inside_tree()) {
+		RID space = get_world_2d()->get_space();
+		Physics2DServer::get_singleton()->area_set_space(area, space);
 	}
-	//if (size != bullets.size()) {
-	//	bullets.resize(size);
-	//}
-	update();
+	bullet->area = area;
+	bullets.push_back(bullet);
+	return bullet;
 }
+
+void BulletManager::clear()
+{
+	Physics2DServer *ps = Physics2DServer::get_singleton();
+	List<BulletManagerBullet*>::Element *E = bullets.front();
+	while(E) {
+		BulletManagerBullet* bullet = E->get();
+		bullet->queue_delete();
+		E = E->next();
+	}
+}
+
+int BulletManager::count()
+{
+	return bullets.size();
+}
+
+Transform2D BulletManager::get_transform() const {
+
+	return Transform2D();
+}
+
+void BulletManager::set_z_index(int z_index) {
+	this->z_index = z_index;
+	VS::get_singleton()->canvas_item_set_z_index(get_canvas_item(), 100);
+	
+}
+
+int BulletManager::get_z_index() const {
+	return z_index;
+}
+
+void BulletManager::set_bounds_margin(float p_bounds_margin) {
+	bounds_margin = p_bounds_margin;
+}
+
+float BulletManager::get_bounds_margin() const {
+	return bounds_margin;
+}
+
+
 
 void BulletManager::_draw_bullets() {
 	if (bullets.size() == 0)
@@ -156,35 +173,34 @@ void BulletManager::_draw_bullet_type(BulletManagerBulletType* type, int &offset
 	draw_rect(type->_cached_dst_rect, debug_color, false);
 	offset_y += type->_cached_dst_rect.size.y + 2 + 1;
 }
-BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 position, Vector2 direction,real_t speed, real_t acceleration) {
-    BulletManagerBullet* bullet(memnew(BulletManagerBullet));
 
-	BulletManagerBulletType* type = types[type_name];
-	bullet->direction = direction;
-	bullet->speed = speed;
-	bullet->acceleration = acceleration;
-	bullet->matrix.elements[2] = position;
-	bullet->type = type;
-	Physics2DServer *ps = Physics2DServer::get_singleton();
-	RID area = ps->area_create();
-	ps->area_attach_object_instance_id(area, bullet->get_instance_id());
-	ps->area_set_collision_layer(area, type->collision_layer);
-	ps->area_set_collision_mask(area, type->collision_mask);
-	ps->area_set_monitor_callback(area, bullet, _body_inout_name);
-	ps->area_set_area_monitor_callback(area, bullet, _area_inout_name);
-	ps->area_set_transform(area, bullet->matrix);
-	ps->area_add_shape(area, type->collision_shape->get_rid());
+void BulletManager::_update_bullets() {
 	
-
-	if (is_inside_tree()) {
-		RID space = get_world_2d()->get_space();
-		Physics2DServer::get_singleton()->area_set_space(area, space);
+	Physics2DServer *ps = Physics2DServer::get_singleton();
+	float delta = get_physics_process_delta_time();
+	int size = bullets.size();
+	Rect2 visible_rect;
+	_get_visible_rect(visible_rect);
+	visible_rect.grow(bounds_margin);
+	{
+		List<BulletManagerBullet*>::Element *E = bullets.front();
+		while(E) {
+			BulletManagerBullet* bullet = E->get();
+			if(bullet->is_queued_for_deletion || !visible_rect.has_point(bullet->matrix.get_origin())) {
+				ps->free(bullet->area);
+				E->erase();
+				memdelete(bullet);
+			}
+			else {
+				bullet->matrix[2] += bullet->direction * bullet->speed  * delta;
+				bullet->speed += bullet->acceleration * delta;
+				ps->area_set_transform(bullet->area, bullet->matrix);
+			}
+			E = E->next();
+		}
 	}
-	bullet->area = area;
-	bullets.push_back(bullet);
-	return bullet;
+	update();
 }
-
 void BulletManager::_register_bullet_types() {
 	types = Map<StringName, BulletManagerBulletType*>();
 	for (int i = 0; i < get_child_count(); i++) {
@@ -209,45 +225,14 @@ void BulletManager::_get_visible_rect(Rect2& rect)
 	rect.size = get_viewport_rect().size;
 }
 
-void BulletManager::clear()
-{
-	Physics2DServer *ps = Physics2DServer::get_singleton();
-	List<BulletManagerBullet*>::Element *E = bullets.front();
-	//for(int i = 0; i < bullets.size(); i++) {
-	while(E) {
-		BulletManagerBullet* bullet = E->get();
-		bullet->queue_delete();
-		/*ps->free(bullet->area);
-		memdelete(bullet);*/
-		E = E->next();
-	}
-	//bullets.clear();
-}
+void BulletManager::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("add_bullet", "position", "direction","speed", "acceleration", "rotation"), &BulletManager::add_bullet);
+	ClassDB::bind_method(D_METHOD("clear"), &BulletManager::clear);
 
-int BulletManager::count()
-{
-	return bullets.size();
-}
-
-Transform2D BulletManager::get_transform() const {
-
-	return Transform2D();
-}
-
-void BulletManager::set_z_index(int z_index) {
-	this->z_index = z_index;
-	VS::get_singleton()->canvas_item_set_z_index(get_canvas_item(), 100);
-	
-}
-
-int BulletManager::get_z_index() const {
-	return z_index;
-}
-
-void BulletManager::set_bounds_margin(float p_bounds_margin) {
-	bounds_margin = p_bounds_margin;
-}
-
-float BulletManager::get_bounds_margin() const {
-	return bounds_margin;
+	ClassDB::bind_method(D_METHOD("set_z_index", "z_index"), &BulletManager::set_z_index);
+	ClassDB::bind_method(D_METHOD("get_z_index"), &BulletManager::get_z_index);
+	ClassDB::bind_method(D_METHOD("set_bounds_margin", "bounds_margin"), &BulletManager::set_bounds_margin);
+	ClassDB::bind_method(D_METHOD("get_bounds_margin"), &BulletManager::get_bounds_margin);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "z_index", PROPERTY_HINT_RANGE, itos(VS::CANVAS_ITEM_Z_MIN) + "," + itos(VS::CANVAS_ITEM_Z_MAX) + ",1"), "set_z_index", "get_z_index");
+	ADD_PROPERTY(PropertyInfo(Variant::REAL, "bounds_margin", PROPERTY_HINT_NONE), "set_bounds_margin", "get_bounds_margin");
 }
