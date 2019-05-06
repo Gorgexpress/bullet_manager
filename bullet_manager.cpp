@@ -220,7 +220,7 @@ void BulletManager::_register_bullet_types() {
 
 void BulletManager::_get_visible_rect(Rect2& rect)
 {
-	Transform2D ctrans = get_canvas_transform();
+	Transform2D ctrans = get_viewport()->get_canvas_transform();
 	rect.position = -ctrans.get_origin() / ctrans.get_scale();
 	rect.size = get_viewport_rect().size;
 }
