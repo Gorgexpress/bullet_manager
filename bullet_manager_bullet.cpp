@@ -1,6 +1,10 @@
 #include "modules/bullet_manager/bullet_manager_bullet.h"
 #include "scene/main/scene_tree.h"
 #include "scene/main/viewport.h"
+#include "core/message_queue.h"
+#include "scene/gui/control.h"
+#include "scene/main/viewport.h"
+#include "servers/visual_server.h"
 
 void BulletManagerBullet::queue_delete() {
     is_queued_for_deletion = true;

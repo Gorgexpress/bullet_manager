@@ -14,6 +14,8 @@ class BulletManager : public CanvasItem {
 	
 	GDCLASS(BulletManager, CanvasItem)
 	
+	Point2 pos;
+    Size2 scale;
 	int z_index = 0;
 	real_t bounds_margin = 300.0;
 	//A linked list allows constant time deletion in the middle of a list, without changing the order of the elements.
@@ -22,6 +24,11 @@ class BulletManager : public CanvasItem {
 
 	StringName _body_inout_name = StaticCString::create("_body_inout");
 	StringName _area_inout_name = StaticCString::create("_area_inout");
+
+	void BulletManager::_edit_set_position(const Point2 &p_position);
+	Point2 BulletManager::_edit_get_position() const;	
+	void BulletManager::_edit_set_scale(const Size2 &p_scale);
+	Size2 BulletManager::_edit_get_scale() const;
 
 	void set_z_index(int z_index);
 	int get_z_index() const;

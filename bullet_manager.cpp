@@ -86,6 +86,22 @@ Transform2D BulletManager::get_transform() const {
 	return Transform2D();
 }
 
+void BulletManager::_edit_set_position(const Point2 &p_position) {
+	pos = p_position;
+}
+
+Point2 BulletManager::_edit_get_position() const {
+	return pos;
+}
+
+void BulletManager::_edit_set_scale(const Size2 &p_scale) {
+	scale = p_scale;
+}
+
+Size2 BulletManager::_edit_get_scale() const {
+	return scale;
+}
+
 void BulletManager::set_z_index(int z_index) {
 	this->z_index = z_index;
 	VS::get_singleton()->canvas_item_set_z_index(get_canvas_item(), 100);
