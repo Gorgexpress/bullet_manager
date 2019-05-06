@@ -181,7 +181,7 @@ void BulletManager::_update_bullets() {
 	int size = bullets.size();
 	Rect2 visible_rect;
 	_get_visible_rect(visible_rect);
-	visible_rect.grow(bounds_margin);
+	visible_rect = visible_rect.grow(bounds_margin);
 	{
 		List<BulletManagerBullet*>::Element *E = bullets.front();
 		while(E) {
