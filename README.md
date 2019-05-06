@@ -49,31 +49,22 @@ func body_collision(bullet, body):
 	bullet.queue_delete()
 ```
 
-The queue_delete() functoin for a bullet will set its collision mask and layer to 0 immediately, then fully delete the
+The queue_delete() function for a bullet will set its collision mask and layer to 0 immediately, then fully delete the
 object next time the BulletManager receives the PhysicsProcess notification. 
 Bullets will also be automatically deleted if they get too far out of your viewport! How far they are allowed to be 
 is based off the BulletManager.bounds_margin property. It defaults to 300, which means a bullet is deleted when its position 
 is 300 units(pixels?) away from the edge of the viewable screen. 
 You can also clear all bullets in a BulletManager with BulletManager.clear(). 
+If you are keeping references too the bullets, you'll have to use is_instance_valid(instance) or weakrefs to make sure you aren't trying to do something to a bullet that has been deleted.
 
 Shoutouts to [This module.](https://github.com/SleepProgger/godot_stuff/tree/master/examples/BulletTest/modules) by SleepProgger.
 It was a very helpful reference for getting this module started!
 
 # TODO
-This module already covers the basics, but not much else. Also, while you can grab a reference to a bullet and change its
-properties from gdscript, that bullet is an Object that can be freed at anytime. Trying to alter an object after it has been freed 
-will crash the game. You'd need to store weakrefs to the bullets. Not sure what direction I should take to make it more user friendly. 
+Bullets are currently held in a doubly linked list, and are created/deleted on demand. A free list with pooling would be more efficient. Not a high priority though. 
 
-I should make it possible to define custom update logic for the bullets. If that logic is defined in gdscript, it will be very slow.
-However, I should make it easy to extend the c++ code with additional classes as well.
+Bullet properties aren't set in stone. Might want to add new ones, like max acceleration. Could use angles instead of a normalized direction vector. Maybe I don't need to store a Transform2D for each bullet. 
 
-The structure used to store the bullets is Godot's List structure, a doubly LinkedList that seems to be meant for a 
-single threaded environment. I get around concurrency issues(atleast I think I do?) by only modifying the linked list nodes 
-themselves in physics_process. queue_delete sets the bullet's collision mask and layer to 0 immediately, and the 
-bullet itself is only deleted next frame. Clear does the same but for all bullets. I might wanna look into supporting fully 
-deleting the object immediately. 
-A LinkedList is chosen because it allows constant time deletion in the middle of the list without reordering the elements.
-Reordering the elements impacts the order that they are drawn. Shuffling that order looks VERY messy, and should not be done.
-If i can keep the draw order from shuffling some other way, then I won't need to use a linked list. 
+Materials apply to every bullet type in the manager. Not sure how to get around that one. 
 
-
+If I could avoid making bullets Objects, without making significant sacrifices, that would be nice. 
