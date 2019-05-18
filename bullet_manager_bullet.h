@@ -2,7 +2,7 @@
 #define BULLET_MANAGER_BULLET_H
 
 #include "core/object.h"
-#include "bullet_manager_bullet_type.h"
+#include "modules/bullet_manager/bullet_manager_bullet_type.h"
 
 class BulletManagerBullet : public Object {
 	

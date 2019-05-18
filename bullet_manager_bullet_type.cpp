@@ -1,4 +1,4 @@
-#include "bullet_manager_bullet_type.h"
+#include "modules/bullet_manager/bullet_manager_bullet_type.h"
 #include "core/os/os.h"
 
 void BulletManagerBulletType::set_texture(const Ref<Texture> &p_texture) {
