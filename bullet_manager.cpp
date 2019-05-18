@@ -36,11 +36,11 @@ void BulletManager::_notification(int p_what) {
 	}
 }
 
-BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 position, Vector2 direction,real_t speed, real_t acceleration) {
+BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 position, real_t angle, real_t speed, real_t acceleration) {
     BulletManagerBullet* bullet(memnew(BulletManagerBullet));
 
 	BulletManagerBulletType* type = types[type_name];
-	bullet->direction = direction;
+	bullet->direction = Vector2(cos(Math::deg2rad(angle)), sin(Math::deg2rad(angle)));
 	bullet->speed = speed;
 	bullet->acceleration = acceleration;
 	bullet->matrix.elements[2] = position;
