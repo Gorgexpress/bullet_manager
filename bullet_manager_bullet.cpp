@@ -42,6 +42,15 @@ Vector2 BulletManagerBullet::get_direction() const {
     return direction;
 }
 
+void BulletManagerBullet::set_angle(real_t angle) {
+    this->direction =  Vector2(cos(Math::deg2rad(angle)), sin(Math::deg2rad(angle)));
+}
+
+real_t BulletManagerBullet::get_angle() const {
+    return direction.angle();
+}
+
+
 
 void BulletManagerBullet::set_speed(real_t speed) {
     this->speed = speed;
@@ -88,6 +97,8 @@ void BulletManagerBullet::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_position"), &BulletManagerBullet::get_position);
 	ClassDB::bind_method(D_METHOD("set_direction", "direction"), &BulletManagerBullet::set_direction);
 	ClassDB::bind_method(D_METHOD("get_direction"), &BulletManagerBullet::get_direction);
+    ClassDB::bind_method(D_METHOD("set_angle", "angle"), &BulletManagerBullet::set_angle);
+	ClassDB::bind_method(D_METHOD("get_angle"), &BulletManagerBullet::get_angle);
     ClassDB::bind_method(D_METHOD("set_speed", "speed"), &BulletManagerBullet::set_speed);
 	ClassDB::bind_method(D_METHOD("get_speed"), &BulletManagerBullet::get_speed);
     ClassDB::bind_method(D_METHOD("set_acceleration", "acceleration"), &BulletManagerBullet::set_acceleration);
@@ -99,6 +110,7 @@ void BulletManagerBullet::_bind_methods() {
     //I'm assuming I don't need property hints for this...
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "position", PROPERTY_HINT_NONE), "set_position", "get_position");
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "direction", PROPERTY_HINT_NONE), "set_direction", "get_direction");
+    ADD_PROPERTY(PropertyInfo(Variant::REAL, "angle", PROPERTY_HINT_NONE), "set_angle", "get_angle");
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "speed", PROPERTY_HINT_NONE), "set_speed", "get_speed");
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "acceleration", PROPERTY_HINT_NONE), "set_acceleration", "get_acceleration");
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "type", PROPERTY_HINT_NONE), "set_type", "get_type");

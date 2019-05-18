@@ -26,6 +26,8 @@ public:
 	Point2 get_position() const;
     void set_direction(Vector2 direction);
     Vector2 get_direction() const;
+    void set_angle(real_t angle);
+    real_t get_angle() const;
     void set_speed(real_t speed);
     real_t get_speed() const;
     void set_acceleration(real_t acceleration);
