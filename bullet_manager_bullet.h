@@ -13,7 +13,6 @@ class BulletManagerBullet : public Object {
     Transform2D matrix;
 	Vector2 direction;
 	real_t speed = 0;
-	real_t acceleration = 0;
 	RID area;
 	bool is_queued_for_deletion = false;
 	BulletManagerBulletType* type;
@@ -30,8 +29,6 @@ public:
     real_t get_angle() const;
     void set_speed(real_t speed);
     real_t get_speed() const;
-    void set_acceleration(real_t acceleration);
-    real_t get_acceleration() const;
     void set_type(Node* bullet_manager_bullet_type);
     Node* get_type() const;
     void queue_delete();

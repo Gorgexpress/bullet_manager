@@ -60,15 +60,6 @@ real_t BulletManagerBullet::get_speed() const {
     return speed;
 }
 
-void BulletManagerBullet::set_acceleration(real_t acceleration) {
-    this->acceleration = acceleration;
-}
-
-real_t BulletManagerBullet::get_acceleration() const {
-    return acceleration;
-}
-
-
 void BulletManagerBullet::set_type(Node* bullet_manager_bullet_type) {
     //Setting the type to one belonging to a different BulletManager isn't supported, and I don't see a good reason to support it.
     ERR_FAIL_COND(this->type->get_parent() != type->get_parent());
@@ -101,8 +92,6 @@ void BulletManagerBullet::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_angle"), &BulletManagerBullet::get_angle);
     ClassDB::bind_method(D_METHOD("set_speed", "speed"), &BulletManagerBullet::set_speed);
 	ClassDB::bind_method(D_METHOD("get_speed"), &BulletManagerBullet::get_speed);
-    ClassDB::bind_method(D_METHOD("set_acceleration", "acceleration"), &BulletManagerBullet::set_acceleration);
-	ClassDB::bind_method(D_METHOD("get_acceleration"), &BulletManagerBullet::get_acceleration);
     ClassDB::bind_method(D_METHOD("set_type", "bullet_manager_bullet_type"), &BulletManagerBullet::set_type);
 	ClassDB::bind_method(D_METHOD("get_type"), &BulletManagerBullet::get_type);
     ClassDB::bind_method(D_METHOD("queue_delete"), &BulletManagerBullet::queue_delete);
@@ -112,7 +101,6 @@ void BulletManagerBullet::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "direction", PROPERTY_HINT_NONE), "set_direction", "get_direction");
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "angle", PROPERTY_HINT_NONE), "set_angle", "get_angle");
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "speed", PROPERTY_HINT_NONE), "set_speed", "get_speed");
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "acceleration", PROPERTY_HINT_NONE), "set_acceleration", "get_acceleration");
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "type", PROPERTY_HINT_NONE), "set_type", "get_type");
 
 }

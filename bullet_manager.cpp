@@ -36,13 +36,12 @@ void BulletManager::_notification(int p_what) {
 	}
 }
 
-BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 position, real_t angle, real_t speed, real_t acceleration) {
+BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 position, real_t angle, real_t speed) {
     BulletManagerBullet* bullet(memnew(BulletManagerBullet));
 
 	BulletManagerBulletType* type = types[type_name];
 	bullet->direction = Vector2(cos(Math::deg2rad(angle)), sin(Math::deg2rad(angle)));
 	bullet->speed = speed;
-	bullet->acceleration = acceleration;
 	bullet->matrix.elements[2] = position;
 	bullet->type = type;
 	Physics2DServer *ps = Physics2DServer::get_singleton();
@@ -209,7 +208,6 @@ void BulletManager::_update_bullets() {
 			}
 			else {
 				bullet->matrix[2] += bullet->direction * bullet->speed  * delta;
-				bullet->speed += bullet->acceleration * delta;
 				ps->area_set_transform(bullet->area, bullet->matrix);
 			}
 			E = E->next();
