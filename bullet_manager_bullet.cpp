@@ -54,7 +54,7 @@ void BulletManagerBullet::set_angle(real_t angle) {
 }
 
 real_t BulletManagerBullet::get_angle() const {
-    return direction.angle();
+    return Math::rad2deg(direction.angle());
 }
 
 
