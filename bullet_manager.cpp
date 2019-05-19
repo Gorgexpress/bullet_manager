@@ -40,10 +40,10 @@ BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 pos
     BulletManagerBullet* bullet(memnew(BulletManagerBullet));
 
 	BulletManagerBulletType* type = types[type_name];
-	bullet->direction = Vector2(cos(Math::deg2rad(angle)), sin(Math::deg2rad(angle)));
+	bullet->type = type;
+	bullet->set_angle(angle); //the set_angle function also rotates the matrix if rotate_physics is true for the bullet type.
 	bullet->speed = speed;
 	bullet->matrix.elements[2] = position;
-	bullet->type = type;
 	Physics2DServer *ps = Physics2DServer::get_singleton();
 	RID area = ps->area_create();
 	ps->area_attach_object_instance_id(area, bullet->get_instance_id());

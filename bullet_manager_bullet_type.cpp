@@ -168,6 +168,16 @@ uint32_t BulletManagerBulletType::get_collision_layer() const {
 	return collision_layer;
 }
 
+void BulletManagerBulletType::set_rotate_physics(bool p_rotate_physics) {
+
+	rotate_physics = p_rotate_physics;
+}
+
+bool BulletManagerBulletType::is_rotating_physics() const {
+
+	return rotate_physics;
+}
+
 void BulletManagerBulletType::_update_cached_rects()  {
 
 	Rect2 base_rect;
@@ -246,6 +256,8 @@ void BulletManagerBulletType::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_collision_layer"), &BulletManagerBulletType::get_collision_layer);
 	ClassDB::bind_method(D_METHOD("set_collision_mask", "collision_mask"), &BulletManagerBulletType::set_collision_mask);
 	ClassDB::bind_method(D_METHOD("get_collision_mask"), &BulletManagerBulletType::get_collision_mask);
+	ClassDB::bind_method(D_METHOD("set_rotate_physics", "enabled"), &BulletManagerBulletType::set_rotate_physics);
+	ClassDB::bind_method(D_METHOD("is_rotating_physics"), &BulletManagerBulletType::is_rotating_physics);
 	
 	//VISUAL PROPERTIES
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "texture", PROPERTY_HINT_RESOURCE_TYPE, "Texture"), "set_texture", "get_texture");
@@ -267,6 +279,7 @@ void BulletManagerBulletType::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "collision_shape", PROPERTY_HINT_RESOURCE_TYPE, "Shape2D"), "set_collision_shape", "get_collision_shape");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "collision_layer", PROPERTY_HINT_LAYERS_2D_PHYSICS), "set_collision_layer", "get_collision_layer");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "collision_mask", PROPERTY_HINT_LAYERS_2D_PHYSICS), "set_collision_mask", "get_collision_mask");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "rotate_physics"), "set_rotate_physics", "is_rotating_physics");
 	
 
 	ADD_SIGNAL(MethodInfo("area_entered_bullet", PropertyInfo(Variant::OBJECT, "bullet", PROPERTY_HINT_RESOURCE_TYPE, "BulletManagerBullet"), PropertyInfo(Variant::OBJECT, "area", PROPERTY_HINT_RESOURCE_TYPE, "Area2D")));

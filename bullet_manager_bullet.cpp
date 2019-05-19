@@ -36,6 +36,9 @@ Point2 BulletManagerBullet::get_position() const {
 
 void BulletManagerBullet::set_direction(Vector2 direction) {
     this->direction = direction;
+     if(this->type->is_rotating_physics()) {
+          this->matrix.set_rotation(direction.angle());
+     }
 }
 
 Vector2 BulletManagerBullet::get_direction() const {
@@ -43,7 +46,11 @@ Vector2 BulletManagerBullet::get_direction() const {
 }
 
 void BulletManagerBullet::set_angle(real_t angle) {
-    this->direction =  Vector2(cos(Math::deg2rad(angle)), sin(Math::deg2rad(angle)));
+    real_t rads = Math::deg2rad(angle);
+    this->direction =  Vector2(cos(rads), sin(rads));
+    if(this->type->is_rotating_physics()) {
+        this->matrix.set_rotation(rads);
+    }
 }
 
 real_t BulletManagerBullet::get_angle() const {

@@ -24,7 +24,7 @@ class BulletManagerBulletType : public Node {
 	Ref<Shape2D> collision_shape;
 	uint32_t collision_mask = 0;
 	uint32_t collision_layer = 0;
-	bool is_rotating_physics = false;
+	bool rotate_physics = false;
 	//These remaining private members are used by BulletManager to cache info.
 	friend class BulletManager;
 	Rect2 _cached_src_rect;
@@ -61,6 +61,8 @@ public:
 	uint32_t get_collision_mask() const;
 	void set_collision_layer(uint32_t p_layer);
 	uint32_t get_collision_layer() const;
+	void set_rotate_physics(bool p_rotate_physics);
+	bool is_rotating_physics() const;
 	void set_collision_shape(const Ref<Shape2D> &p_shape);
 	Ref<Shape2D> get_collision_shape() const;
 
