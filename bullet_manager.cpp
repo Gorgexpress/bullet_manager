@@ -240,7 +240,7 @@ void BulletManager::_get_visible_rect(Rect2& rect)
 }
 
 void BulletManager::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("add_bullet", "position", "direction","speed", "acceleration", "rotation"), &BulletManager::add_bullet);
+	ClassDB::bind_method(D_METHOD("add_bullet", "position", "angle","speed"), &BulletManager::add_bullet);
 	ClassDB::bind_method(D_METHOD("clear"), &BulletManager::clear);
 
 	ClassDB::bind_method(D_METHOD("set_z_index", "z_index"), &BulletManager::set_z_index);
