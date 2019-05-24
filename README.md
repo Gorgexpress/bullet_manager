@@ -3,7 +3,7 @@ Godot module that adds classes made for dealing with large amounts of 2d project
 
 BulletManager - The core class. Holds all the bullets, and handles rendering/updating them. Extends CanvasItem. 
 BulletManagerBulletType - Defines a type of bullet. Should always be a direct child of a BulletManager. Extends Node.
-BulletManagerBullet - A single bullet, with a position, velocity, speed, acceleration, and type. Extends Object. 
+BulletManagerBullet - A single bullet, with a position, angle, speed, and type. Extends Object. 
 
 ## Installing
 Clone into the modules folder and compile Godot. Should just work in 3.0. Not sure about 3.1. 
@@ -20,7 +20,7 @@ resorting to a custom module to handle your projectiles!
 Grab a reference to your BulletManager node to add a bullet. You may wish to make it an autoload singleton. You may
 also want to have seperate BulletManager nodes for the player and the enemies.
 
-Add a bullet with BulletManager.add_bullet(String type_name, Vector2 position, Vector2 direction,float speed, float acceleration = 0)
+Add a bullet with BulletManager.add_bullet(String type_name, Vector2 position, float angle, float speed)
 Where type_name is the name of the BulletManagerBulletType node. 
 
 BulletManagerBulletType's have 2 custom signals for collision responses:
@@ -60,11 +60,11 @@ If you are keeping references too the bullets, you'll have to use is_instance_va
 Shoutouts to [This module.](https://github.com/SleepProgger/godot_stuff/tree/master/examples/BulletTest/modules) by SleepProgger.
 It was a very helpful reference for getting this module started!
 
-# TODO
+# Future
+Sometimes, you'll want bullets with more advanced physics logic. Acceleration, separate x and y velocities, etc. I don't want to have bullets with different properties, as everything can be done by manipulating the speed and angle. I could, however, make it easier to do so. Right now, you can attach a script to BulletManager that stores the bullet returned by add_bullet in an array. You can loop over this list in _physics_process to manipulate the speed and angle, but you'll have to call is_instance_valid(bullet) on each bullet to make sure it hasn't been freed. What can I do to make implementing bullets with different physics easier?
+
+Rendering can be improved. Materials apply to every bullet type in the manager. Not sure how to get around that one. Right now, you would animate bullets by using an AnimationPlayer on the BulletManagerType node. This means animation state for all bullets of the same type are synced. Most shmups seem to sync animations, but I'm sure some would rather have each bullet be animated individually. 
+
 Bullets are currently held in a doubly linked list, and are created/deleted on demand. A free list with pooling would be more efficient. Not a high priority though. 
-
-Bullet properties aren't set in stone. Might want to add new ones, like max acceleration. Could use angles instead of a normalized direction vector. Maybe I don't need to store a Transform2D for each bullet. 
-
-Materials apply to every bullet type in the manager. Not sure how to get around that one. 
 
 If I could avoid making bullets Objects, without making significant sacrifices, that would be nice. 
