@@ -52,11 +52,11 @@ protected:
 
 public:
 	int add_bullet(StringName type, Vector2 position, real_t angle, real_t speed);
-	void update_bullet_position(int bullet_id, Vector2 position);
+	void set_bullet_position(int bullet_id, Vector2 position);
 	Vector2 get_bullet_position(int bullet_id) const;
-	void update_bullet_speed(int bullet_id, real_t speed);
+	void set_bullet_speed(int bullet_id, real_t speed);
 	real_t get_bullet_speed(int bullet_id) const;
-	void update_bullet_angle(int bullet_id, real_t speed);
+	void set_bullet_angle(int bullet_id, real_t speed);
 	real_t get_bullet_angle(int bullet_id) const;
 	void queue_delete_bullet(int bullet_id);
 	void clear();

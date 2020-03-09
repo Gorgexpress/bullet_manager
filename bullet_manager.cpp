@@ -269,7 +269,7 @@ void BulletManager::_get_visible_rect(Rect2& rect)
 	rect.size = get_viewport_rect().size;
 }
 
-void BulletManager::update_bullet_position(int bullet_id, Vector2 position) {
+void BulletManager::set_bullet_position(int bullet_id, Vector2 position) {
 	if (bullet_id < _bullets.size()) {
 		_bullets[bullet_id]->matrix.set_origin(position);
 	}
@@ -282,7 +282,7 @@ Vector2 BulletManager::get_bullet_position(int bullet_id) const {
 	return Vector2();
 }
 
-void BulletManager::update_bullet_speed(int bullet_id, real_t speed) {
+void BulletManager::set_bullet_speed(int bullet_id, real_t speed) {
 	if (bullet_id < _bullets.size()) {
 		_bullets[bullet_id]->speed = speed;
 	}
@@ -295,7 +295,7 @@ real_t BulletManager::get_bullet_speed(int bullet_id) const {
 	return 0.0;
 }
 
-void BulletManager::update_bullet_angle(int bullet_id, real_t angle) {
+void BulletManager::set_bullet_angle(int bullet_id, real_t angle) {
 	if (bullet_id < _bullets.size()) {
 		_bullets[bullet_id]->set_angle(angle);
 	}
@@ -319,11 +319,11 @@ void BulletManager::queue_delete_bullet(int bullet_id) {
 
 void BulletManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("add_bullet", "position", "angle","speed"), &BulletManager::add_bullet);
-	ClassDB::bind_method(D_METHOD("update_bullet_position", "bullet_id", "position"), &BulletManager::update_bullet_position);
+	ClassDB::bind_method(D_METHOD("set_bullet_position", "bullet_id", "position"), &BulletManager::set_bullet_position);
 	ClassDB::bind_method(D_METHOD("get_bullet_position", "bullet_id"), &BulletManager::get_bullet_position);
-	ClassDB::bind_method(D_METHOD("update_bullet_speed", "bullet_id", "speed"), &BulletManager::update_bullet_speed);
+	ClassDB::bind_method(D_METHOD("set_bullet_speed", "bullet_id", "speed"), &BulletManager::set_bullet_speed);
 	ClassDB::bind_method(D_METHOD("get_bullet_speed", "bullet_id"), &BulletManager::get_bullet_speed);
-	ClassDB::bind_method(D_METHOD("update_bullet_angle", "bullet_id", "angle"), &BulletManager::update_bullet_angle);
+	ClassDB::bind_method(D_METHOD("set_bullet_angle", "bullet_id", "angle"), &BulletManager::set_bullet_angle);
 	ClassDB::bind_method(D_METHOD("get_bullet_angle", "bullet_id"), &BulletManager::get_bullet_angle);
 	ClassDB::bind_method(D_METHOD("queue_delete_bullet", "bullet_id"), &BulletManager::queue_delete_bullet);
 	ClassDB::bind_method(D_METHOD("clear"), &BulletManager::clear);
