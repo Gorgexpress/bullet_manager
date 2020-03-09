@@ -10,6 +10,7 @@ void BulletManagerBullet::queue_delete() {
     is_queued_for_deletion = true;
     Physics2DServer::get_singleton()->area_set_collision_layer(area, 0);
     Physics2DServer::get_singleton()->area_set_collision_mask(area, 0);
+    //Physics2DServer::get_singleton()->area_set_shape_disabled(area, 0, true);
 }
 void BulletManagerBullet::_area_inout(int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape) {
 	if (is_queued_for_deletion) {

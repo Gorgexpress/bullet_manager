@@ -37,37 +37,47 @@ void BulletManager::_notification(int p_what) {
 }
 
 BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 position, real_t angle, real_t speed) {
-    BulletManagerBullet* bullet(memnew(BulletManagerBullet));
-
+    Physics2DServer *ps = Physics2DServer::get_singleton();
 	BulletManagerBulletType* type = types[type_name];
+	BulletManagerBullet* bullet;
+	if (_unused_ids.size() == 0) {
+		bullet = memnew(BulletManagerBullet);
+		bullet->id = _bullets.size();
+		_bullets.push_back(bullet);
+		RID area = ps->area_create();
+		ps->area_attach_object_instance_id(area, bullet->get_instance_id());
+		ps->area_set_monitor_callback(area, bullet, _body_inout_name);
+		ps->area_set_area_monitor_callback(area, bullet, _area_inout_name);
+		ps->area_set_transform(area, bullet->matrix);
+		ps->area_add_shape(area, type->collision_shape->get_rid());
+		if (is_inside_tree()) {
+			RID space = get_world_2d()->get_space();
+			Physics2DServer::get_singleton()->area_set_space(area, space);
+		}
+		bullet->area = area;
+	} else {
+		int id = _unused_ids.front()->get();
+		_unused_ids.pop_front();
+		bullet = _bullets[id];
+	}
+	ERR_FAIL_COND_V(_active_bullets.size() >= _bullets.size(), NULL);
 	bullet->type = type;
 	bullet->set_angle(angle); //the set_angle function also rotates the matrix if rotate_physics is true for the bullet type.
 	bullet->speed = speed;
 	bullet->matrix.elements[2] = position;
-	Physics2DServer *ps = Physics2DServer::get_singleton();
-	RID area = ps->area_create();
-	ps->area_attach_object_instance_id(area, bullet->get_instance_id());
-	ps->area_set_collision_layer(area, type->collision_layer);
-	ps->area_set_collision_mask(area, type->collision_mask);
-	ps->area_set_monitor_callback(area, bullet, _body_inout_name);
-	ps->area_set_area_monitor_callback(area, bullet, _area_inout_name);
-	ps->area_set_transform(area, bullet->matrix);
-	ps->area_add_shape(area, type->collision_shape->get_rid());
-	
-
-	if (is_inside_tree()) {
-		RID space = get_world_2d()->get_space();
-		Physics2DServer::get_singleton()->area_set_space(area, space);
-	}
-	bullet->area = area;
-	bullets.push_back(bullet);
+	bullet->is_queued_for_deletion = false;
+	ps->area_set_transform(bullet->area, bullet->matrix);
+	ps->area_set_collision_layer(bullet->area, type->collision_layer);
+	ps->area_set_collision_mask(bullet->area, type->collision_mask);
+	ps->area_set_shape_disabled(bullet->area, 0, false);
+	_active_bullets.push_back(bullet);
 	return bullet;
 }
 
 void BulletManager::clear()
 {
 	Physics2DServer *ps = Physics2DServer::get_singleton();
-	List<BulletManagerBullet*>::Element *E = bullets.front();
+	List<BulletManagerBullet*>::Element *E = _active_bullets.front();
 	while(E) {
 		BulletManagerBullet* bullet = E->get();
 		bullet->queue_delete();
@@ -77,7 +87,7 @@ void BulletManager::clear()
 
 int BulletManager::count()
 {
-	return bullets.size();
+	return _active_bullets.size();
 }
 
 Transform2D BulletManager::get_transform() const {
@@ -129,10 +139,10 @@ void BulletManager::_draw_bullets() {
 		type->_update_cached_rects();
 		vs->canvas_item_clear(type->get_canvas_item());
 	}
-	if (bullets.size() == 0) {
+	if (_active_bullets.size() == 0) {
 		return;
 	}
-	List<BulletManagerBullet*>::Element *E = bullets.front();
+	List<BulletManagerBullet*>::Element *E = _active_bullets.front();
 	//for(int i = 0; i < bullets.size(); i++) {
 	while(E) {
 		//Bullet* bullet = r[i];
@@ -202,23 +212,26 @@ void BulletManager::_update_bullets() {
 	
 	Physics2DServer *ps = Physics2DServer::get_singleton();
 	float delta = get_physics_process_delta_time();
-	int size = bullets.size();
+	int size = _active_bullets.size();
 	Rect2 visible_rect;
 	_get_visible_rect(visible_rect);
 	visible_rect = visible_rect.grow(bounds_margin);
 	{
-		List<BulletManagerBullet*>::Element *E = bullets.front();
+		List<BulletManagerBullet*>::Element *E = _active_bullets.front();
 		while(E) {
 			BulletManagerBullet* bullet = E->get();
 			if(bullet->is_queued_for_deletion) {
-				ps->free(bullet->area);
+				ps->area_set_shape_disabled(bullet->area, 0, true);
+				_unused_ids.push_front(bullet->id);
 				E->erase();
-				memdelete(bullet);
 			} else if (!visible_rect.has_point(bullet->matrix.get_origin())) {
 				bullet->type->emit_signal("bullet_clipped", bullet);
-				ps->free(bullet->area);
+				bullet->is_queued_for_deletion = true;
+				_unused_ids.push_front(bullet->id);
+				ps->area_set_collision_layer(bullet->area, 0);
+				ps->area_set_collision_mask(bullet->area, 0);
+				ps->area_set_shape_disabled(bullet->area, 0, true);
 				E->erase();
-				memdelete(bullet);
 			}
 			else {
 				bullet->matrix[2] += bullet->direction * bullet->speed  * delta;

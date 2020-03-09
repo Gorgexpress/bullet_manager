@@ -13,6 +13,7 @@ class BulletManagerBullet : public Object {
     Transform2D matrix;
 	Vector2 direction;
 	real_t speed = 0;
+    int id; //also servers as index into bullets array in bulletmanager
 	RID area;
 	bool is_queued_for_deletion = false;
 	BulletManagerBulletType* type;

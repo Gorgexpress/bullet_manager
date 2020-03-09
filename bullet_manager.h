@@ -18,8 +18,12 @@ class BulletManager : public CanvasItem {
     Size2 scale;
 	int z_index = 0;
 	real_t bounds_margin = 300.0;
-	//A linked list allows constant time deletion in the middle of a list, without changing the order of the elements.
-	List<BulletManagerBullet*> bullets; 
+	//pool of bullets both used and unused bullets
+	Vector<BulletManagerBullet*> _bullets;
+	//Active bullets only. A linked list allows constant time deletion in the middle of a list, without changing the order of the elements.
+	List<BulletManagerBullet*> _active_bullets; 
+	List<int> _unused_ids; //bullet ids are indices into the bullets vector.
+	
 	Map<StringName, BulletManagerBulletType*> types;
 
 	StringName _body_inout_name = StaticCString::create("_body_inout");
