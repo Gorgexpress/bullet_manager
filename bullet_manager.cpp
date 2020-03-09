@@ -103,7 +103,7 @@ Size2 BulletManager::_edit_get_scale() const {
 
 void BulletManager::set_z_index(int z_index) {
 	this->z_index = z_index;
-	VS::get_singleton()->canvas_item_set_z_index(get_canvas_item(), 100);
+	VS::get_singleton()->canvas_item_set_z_index(get_canvas_item(), z_index);
 	
 }
 
@@ -122,27 +122,36 @@ float BulletManager::get_bounds_margin() const {
 
 
 void BulletManager::_draw_bullets() {
-	if (bullets.size() == 0)
-		return;
+	VisualServer* vs = VS::get_singleton();
 	//Update cached type info incase any of its properties have been changed.
 	for (Map<StringName, BulletManagerBulletType*>::Element *E = types.front(); E; E = E->next()) {
-		E->get()->_update_cached_rects();
+		BulletManagerBulletType* type = E->get();
+		type->_update_cached_rects();
+		vs->canvas_item_clear(type->get_canvas_item());
 	}
-	RID ci = get_canvas_item();
-
+	if (bullets.size() == 0) {
+		return;
+	}
 	List<BulletManagerBullet*>::Element *E = bullets.front();
 	//for(int i = 0; i < bullets.size(); i++) {
 	while(E) {
 		//Bullet* bullet = r[i];
 		BulletManagerBullet* bullet = E->get();
 		BulletManagerBulletType* type = bullet->type;
+		RID ci = type->get_canvas_item();
 		if (type->rotate_visual) {
-			draw_set_transform(bullet->matrix.get_origin(), bullet->direction.angle() + (Math_PI * -0.5), bullet->matrix.get_scale());
+			Transform2D tform;
+			tform.set_origin(bullet->matrix.get_origin());
+			tform.set_rotation_and_scale(bullet->direction.angle() + (Math_PI * -0.5), bullet->matrix.get_scale());
+			vs->canvas_item_add_set_transform(ci, tform);
+			//draw_set_transform(bullet->matrix.get_origin(), bullet->direction.angle() + (Math_PI * -0.5), bullet->matrix.get_scale());
 		}
 		else {
-			draw_set_transform_matrix(bullet->matrix);
+			vs->canvas_item_add_set_transform(ci, bullet->matrix);
+			//draw_set_transform_matrix(bullet->matrix);
 		}
-		draw_texture_rect_region(type->texture, type->_cached_dst_rect, type->_cached_src_rect, Color(1, 1, 1), false, type->normal_map);
+		vs->canvas_item_add_texture_rect_region(ci, type->_cached_dst_rect, type->texture->get_rid(), type->_cached_src_rect);
+		//draw_texture_rect_region(type->texture, type->_cached_dst_rect, type->_cached_src_rect, Color(1, 1, 1), false, type->normal_map);
 		E = E->next();
 	}
 	
@@ -201,7 +210,12 @@ void BulletManager::_update_bullets() {
 		List<BulletManagerBullet*>::Element *E = bullets.front();
 		while(E) {
 			BulletManagerBullet* bullet = E->get();
-			if(bullet->is_queued_for_deletion || !visible_rect.has_point(bullet->matrix.get_origin())) {
+			if(bullet->is_queued_for_deletion) {
+				ps->free(bullet->area);
+				E->erase();
+				memdelete(bullet);
+			} else if (!visible_rect.has_point(bullet->matrix.get_origin())) {
+				bullet->type->emit_signal("bullet_clipped", bullet);
 				ps->free(bullet->area);
 				E->erase();
 				memdelete(bullet);
@@ -228,7 +242,10 @@ void BulletManager::_register_bullet_types() {
 		if (types.has(name)) {
 			print_error("Duplicate type " + name + " in BulletManager named " + get_name());
 		}
-		types[name] = Object::cast_to<BulletManagerBulletType>(child);
+		BulletManagerBulletType* typeNode = Object::cast_to<BulletManagerBulletType>(child);
+		typeNode->set_as_toplevel(true);
+		types[name] = typeNode;
+		
 	}
 }
 

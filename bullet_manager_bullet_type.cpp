@@ -284,5 +284,6 @@ void BulletManagerBulletType::_bind_methods() {
 
 	ADD_SIGNAL(MethodInfo("area_entered_bullet", PropertyInfo(Variant::OBJECT, "bullet", PROPERTY_HINT_RESOURCE_TYPE, "BulletManagerBullet"), PropertyInfo(Variant::OBJECT, "area", PROPERTY_HINT_RESOURCE_TYPE, "Area2D")));
 	ADD_SIGNAL(MethodInfo("body_entered_bullet", PropertyInfo(Variant::OBJECT, "bullet", PROPERTY_HINT_RESOURCE_TYPE, "BulletManagerBullet"), PropertyInfo(Variant::OBJECT, "body", PROPERTY_HINT_RESOURCE_TYPE, "PhysicsBody2D")));
+	ADD_SIGNAL(MethodInfo("bullet_clipped", PropertyInfo(Variant::OBJECT, "bullet", PROPERTY_HINT_RESOURCE_TYPE, "BulletManagerBullet")));
 
 }

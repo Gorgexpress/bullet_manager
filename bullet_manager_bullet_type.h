@@ -2,14 +2,14 @@
 #define BULLET_MANAGER_BULLET_TYPE_H
 
 #include "scene/2d/sprite.h"
-#include "scene/main/node.h"
+#include "scene/2d/node_2d.h"
 #include "scene/resources/texture.h"
 #include "scene/resources/shape_2d.h"
 
 
-class BulletManagerBulletType : public Node {
+class BulletManagerBulletType : public Node2D {
 	
-	GDCLASS(BulletManagerBulletType, Node)
+	GDCLASS(BulletManagerBulletType, Node2D)
 	
 	Ref<Texture> texture;
 	Ref<Texture> normal_map;
