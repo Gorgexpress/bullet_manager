@@ -16,13 +16,13 @@ void BulletManagerBullet::_area_inout(int p_status, const RID &p_area, int p_ins
 	if (is_queued_for_deletion) {
         return;
     }
-	type->area_inout(this, p_status, p_area, p_instance, p_area_shape, p_self_shape );
+	type->area_inout(id, p_status, p_area, p_instance, p_area_shape, p_self_shape );
 }
 void BulletManagerBullet::_body_inout(int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape) {
     if (is_queued_for_deletion) {
         return;
     }
-	type->body_inout(this, p_status, p_body, p_instance, p_body_shape, p_area_shape );
+	type->body_inout(id, p_status, p_body, p_instance, p_body_shape, p_area_shape );
 }
 
 void BulletManagerBullet::set_position(Point2 position) {

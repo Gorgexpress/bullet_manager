@@ -66,8 +66,8 @@ public:
 	void set_collision_shape(const Ref<Shape2D> &p_shape);
 	Ref<Shape2D> get_collision_shape() const;
 
-	void area_inout(Object* bullet, int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape);
-	void body_inout(Object* bullet, int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape);
+	void area_inout(int bullet_id, int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape);
+	void body_inout(int bullet_id, int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape);
 
 };
 

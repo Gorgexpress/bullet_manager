@@ -36,7 +36,7 @@ void BulletManager::_notification(int p_what) {
 	}
 }
 
-BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 position, real_t angle, real_t speed) {
+int BulletManager::add_bullet(StringName type_name, Vector2 position, real_t angle, real_t speed) {
     Physics2DServer *ps = Physics2DServer::get_singleton();
 	BulletManagerBulletType* type = types[type_name];
 	BulletManagerBullet* bullet;
@@ -71,7 +71,7 @@ BulletManagerBullet* BulletManager::add_bullet(StringName type_name, Vector2 pos
 	ps->area_set_collision_mask(bullet->area, type->collision_mask);
 	ps->area_set_shape_disabled(bullet->area, 0, false);
 	_active_bullets.push_back(bullet);
-	return bullet;
+	return bullet->id;
 }
 
 void BulletManager::clear()
@@ -225,7 +225,7 @@ void BulletManager::_update_bullets() {
 				_unused_ids.push_front(bullet->id);
 				E->erase();
 			} else if (!visible_rect.has_point(bullet->matrix.get_origin())) {
-				bullet->type->emit_signal("bullet_clipped", bullet);
+				bullet->type->emit_signal("bullet_clipped", bullet->id);
 				bullet->is_queued_for_deletion = true;
 				_unused_ids.push_front(bullet->id);
 				ps->area_set_collision_layer(bullet->area, 0);
@@ -269,8 +269,63 @@ void BulletManager::_get_visible_rect(Rect2& rect)
 	rect.size = get_viewport_rect().size;
 }
 
+void BulletManager::update_bullet_position(int bullet_id, Vector2 position) {
+	if (bullet_id < _bullets.size()) {
+		_bullets[bullet_id]->matrix.set_origin(position);
+	}
+}
+
+Vector2 BulletManager::get_bullet_position(int bullet_id) const {
+	if (bullet_id < _bullets.size()) {
+		return _bullets[bullet_id]->matrix.get_origin();
+	}
+	return Vector2();
+}
+
+void BulletManager::update_bullet_speed(int bullet_id, real_t speed) {
+	if (bullet_id < _bullets.size()) {
+		_bullets[bullet_id]->speed = speed;
+	}
+}
+
+real_t BulletManager::get_bullet_speed(int bullet_id) const {
+	if (bullet_id < _bullets.size()) {
+		return _bullets[bullet_id]->speed;
+	}
+	return 0.0;
+}
+
+void BulletManager::update_bullet_angle(int bullet_id, real_t angle) {
+	if (bullet_id < _bullets.size()) {
+		_bullets[bullet_id]->set_angle(angle);
+	}
+}
+
+real_t BulletManager::get_bullet_angle(int bullet_id) const {
+	if (bullet_id < _bullets.size()) {
+		return _bullets[bullet_id]->direction.angle();
+	}
+	return 0.0;
+}
+
+void BulletManager::queue_delete_bullet(int bullet_id) {
+	if (bullet_id < _bullets.size()) {
+		BulletManagerBullet* bullet = _bullets[bullet_id];
+		bullet->is_queued_for_deletion = true;
+		Physics2DServer::get_singleton()->area_set_collision_layer(bullet->area, 0);
+    	Physics2DServer::get_singleton()->area_set_collision_mask(bullet->area, 0);
+	}
+}
+
 void BulletManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("add_bullet", "position", "angle","speed"), &BulletManager::add_bullet);
+	ClassDB::bind_method(D_METHOD("update_bullet_position", "bullet_id", "position"), &BulletManager::update_bullet_position);
+	ClassDB::bind_method(D_METHOD("get_bullet_position", "bullet_id"), &BulletManager::get_bullet_position);
+	ClassDB::bind_method(D_METHOD("update_bullet_speed", "bullet_id", "speed"), &BulletManager::update_bullet_speed);
+	ClassDB::bind_method(D_METHOD("get_bullet_speed", "bullet_id"), &BulletManager::get_bullet_speed);
+	ClassDB::bind_method(D_METHOD("update_bullet_angle", "bullet_id", "angle"), &BulletManager::update_bullet_angle);
+	ClassDB::bind_method(D_METHOD("get_bullet_angle", "bullet_id"), &BulletManager::get_bullet_angle);
+	ClassDB::bind_method(D_METHOD("queue_delete_bullet", "bullet_id"), &BulletManager::queue_delete_bullet);
 	ClassDB::bind_method(D_METHOD("clear"), &BulletManager::clear);
 
 	ClassDB::bind_method(D_METHOD("set_z_index", "z_index"), &BulletManager::set_z_index);

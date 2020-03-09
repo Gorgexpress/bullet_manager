@@ -51,7 +51,14 @@ protected:
 	static void _bind_methods();
 
 public:
-	BulletManagerBullet* add_bullet(StringName type, Vector2 position, real_t angle, real_t speed);
+	int add_bullet(StringName type, Vector2 position, real_t angle, real_t speed);
+	void update_bullet_position(int bullet_id, Vector2 position);
+	Vector2 get_bullet_position(int bullet_id) const;
+	void update_bullet_speed(int bullet_id, real_t speed);
+	real_t get_bullet_speed(int bullet_id) const;
+	void update_bullet_angle(int bullet_id, real_t speed);
+	real_t get_bullet_angle(int bullet_id) const;
+	void queue_delete_bullet(int bullet_id);
 	void clear();
 	int count();
 	Transform2D get_transform() const;

@@ -211,13 +211,13 @@ void BulletManagerBulletType::_update_cached_rects()  {
 		r_dst_rect.size.y = -r_dst_rect.size.y;*/
 }
 
-void BulletManagerBulletType::area_inout(Object* bullet, int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape) {
+void BulletManagerBulletType::area_inout(int bullet_id, int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape) {
 	Object* collider = ObjectDB::get_instance(p_instance);
-	emit_signal("area_entered_bullet", bullet, collider);
+	emit_signal("area_entered_bullet", bullet_id, collider);
 }
-void BulletManagerBulletType::body_inout(Object* bullet, int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape) {
+void BulletManagerBulletType::body_inout(int bullet_id, int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape) {
 	Object* collider = ObjectDB::get_instance(p_instance);
-	emit_signal("body_entered_bullet", bullet, collider);
+	emit_signal("body_entered_bullet", bullet_id, collider);
 }
 
 void BulletManagerBulletType::_bind_methods() {
@@ -282,8 +282,8 @@ void BulletManagerBulletType::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "rotate_physics"), "set_rotate_physics", "is_rotating_physics");
 	
 
-	ADD_SIGNAL(MethodInfo("area_entered_bullet", PropertyInfo(Variant::OBJECT, "bullet", PROPERTY_HINT_RESOURCE_TYPE, "BulletManagerBullet"), PropertyInfo(Variant::OBJECT, "area", PROPERTY_HINT_RESOURCE_TYPE, "Area2D")));
-	ADD_SIGNAL(MethodInfo("body_entered_bullet", PropertyInfo(Variant::OBJECT, "bullet", PROPERTY_HINT_RESOURCE_TYPE, "BulletManagerBullet"), PropertyInfo(Variant::OBJECT, "body", PROPERTY_HINT_RESOURCE_TYPE, "PhysicsBody2D")));
-	ADD_SIGNAL(MethodInfo("bullet_clipped", PropertyInfo(Variant::OBJECT, "bullet", PROPERTY_HINT_RESOURCE_TYPE, "BulletManagerBullet")));
+	ADD_SIGNAL(MethodInfo("area_entered_bullet", PropertyInfo(Variant::INT, "bullet_id", PROPERTY_HINT_NONE, "bullet_id"), PropertyInfo(Variant::OBJECT, "area", PROPERTY_HINT_RESOURCE_TYPE, "Area2D")));
+	ADD_SIGNAL(MethodInfo("body_entered_bullet", PropertyInfo(Variant::INT, "bullet_id", PROPERTY_HINT_NONE, "bullet_id"), PropertyInfo(Variant::OBJECT, "body", PROPERTY_HINT_RESOURCE_TYPE, "PhysicsBody2D")));
+	ADD_SIGNAL(MethodInfo("bullet_clipped", PropertyInfo(Variant::INT, "bullet_id", PROPERTY_HINT_NONE, "bullet_id")));
 
 }
