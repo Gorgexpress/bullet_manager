@@ -332,6 +332,24 @@ void BulletManagerBulletType::body_inout(int bullet_id, int p_status, const RID 
 	emit_signal("body_entered_bullet", bullet_id, collider);
 }
 
+void BulletManagerBulletType::_notification(int p_what) {
+	switch (p_what) {
+		case NOTIFICATION_PARENTED: {
+			_bullet_manager = Object::cast_to<BulletManager>(get_parent());
+			if (!_bullet_manager) {
+				return;
+			}
+			_bullet_manager->register_bullet_type(this);
+		} break;
+		case NOTIFICATION_UNPARENTED: {
+			if(!_bullet_manager) {
+				return;
+			}
+			_bullet_manager->unregister_bullet_type(this);
+			_bullet_manager = NULL;
+		}
+	}
+}
 void BulletManagerBulletType::_bind_methods() {
 	//VISUAL
 	ClassDB::bind_method(D_METHOD("set_texture", "texture"), &BulletManagerBulletType::set_texture);
@@ -409,8 +427,7 @@ void BulletManager::_notification(int p_what) {
 
 		case NOTIFICATION_READY: {
 			set_physics_process(true);
-			_register_bullet_types();
-			set_as_toplevel(true);
+			//set_as_toplevel(true);
 			VS::get_singleton()->canvas_item_set_z_index(get_canvas_item(), z_index);
 		} break;
 		case NOTIFICATION_DRAW: {
@@ -636,24 +653,15 @@ void BulletManager::_update_bullets() {
 	}
 	update();
 }
-void BulletManager::_register_bullet_types() {
-	types = Map<StringName, BulletManagerBulletType*>();
-	for (int i = 0; i < get_child_count(); i++) {
 
-		Node *child = get_child(i);
+//Should only be used on direct children. BulletManagerBulletTypes will call this on themselves when parented to a BulletManager.
+//Godot doesn't allow duplicate names among neighbors, so i won't check for duplicates here.
+void BulletManager::register_bullet_type(BulletManagerBulletType* type) {
+	types[type->get_name()] = type;
+}
 
-		if (!Object::cast_to<BulletManagerBulletType>(child)) {
-			continue;
-		}
-		StringName name = child->get_name();
-		if (types.has(name)) {
-			print_error("Duplicate type " + name + " in BulletManager named " + get_name());
-		}
-		BulletManagerBulletType* typeNode = Object::cast_to<BulletManagerBulletType>(child);
-		typeNode->set_as_toplevel(true);
-		types[name] = typeNode;
-		
-	}
+void BulletManager::unregister_bullet_type(BulletManagerBulletType* type) {
+	types.erase(type->get_name());
 }
 
 void BulletManager::_get_visible_rect(Rect2& rect)

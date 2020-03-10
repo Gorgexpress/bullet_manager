@@ -65,10 +65,12 @@ class BulletManagerBulletType : public Node2D {
 	friend class BulletManager;
 	Rect2 _cached_src_rect;
 	Rect2 _cached_dst_rect;
+	BulletManager* _bullet_manager;
 	void _update_cached_rects();
 	
 	
 protected:
+	void _notification(int p_what);
 	static void _bind_methods();
 
 public:
@@ -140,7 +142,6 @@ class BulletManager : public CanvasItem {
 	void _draw_bullets();
 	void _draw_editor_hint();
 	void _draw_bullet_type(BulletManagerBulletType* type, int &offset_y);
-	void _register_bullet_types();
 	void _get_visible_rect(Rect2 &rect);
 
 protected:
@@ -159,6 +160,8 @@ public:
 	void queue_delete_bullet(int bullet_id);
 	void clear();
 	int count();
+	void register_bullet_type(BulletManagerBulletType* type);
+	void unregister_bullet_type(BulletManagerBulletType* type);
 	Transform2D get_transform() const;
 
 };
