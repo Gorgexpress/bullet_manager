@@ -617,6 +617,7 @@ void BulletManager::_draw_bullet_type(BulletManagerBulletType* type, int &offset
 	draw_line(Point2(half_x, start_y), Point2(half_x, end_y), debug_color);
 	draw_rect(type->_cached_dst_rect, debug_color, false);
 	offset_y += type->_cached_dst_rect.size.y + 2 + 1;
+	type->collision_shape->draw(get_canvas_item(), get_tree()->get_debug_collisions_color());
 }
 
 void BulletManager::_update_bullets() {
