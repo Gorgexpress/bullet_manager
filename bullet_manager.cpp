@@ -428,7 +428,7 @@ void BulletManager::_notification(int p_what) {
 		case NOTIFICATION_READY: {
 			set_physics_process(true);
 			//set_as_toplevel(true);
-			VS::get_singleton()->canvas_item_set_z_index(get_canvas_item(), z_index);
+			//VS::get_singleton()->canvas_item_set_z_index(get_canvas_item(), z_index);
 		} break;
 		case NOTIFICATION_DRAW: {
 			if (Engine::get_singleton()->is_editor_hint()) {
@@ -499,37 +499,6 @@ void BulletManager::clear()
 int BulletManager::count()
 {
 	return _active_bullets.size();
-}
-
-Transform2D BulletManager::get_transform() const {
-
-	return Transform2D();
-}
-
-void BulletManager::_edit_set_position(const Point2 &p_position) {
-	pos = p_position;
-}
-
-Point2 BulletManager::_edit_get_position() const {
-	return pos;
-}
-
-void BulletManager::_edit_set_scale(const Size2 &p_scale) {
-	scale = p_scale;
-}
-
-Size2 BulletManager::_edit_get_scale() const {
-	return scale;
-}
-
-void BulletManager::set_z_index(int z_index) {
-	this->z_index = z_index;
-	VS::get_singleton()->canvas_item_set_z_index(get_canvas_item(), z_index);
-	
-}
-
-int BulletManager::get_z_index() const {
-	return z_index;
 }
 
 void BulletManager::set_bounds_margin(float p_bounds_margin) {
@@ -731,10 +700,7 @@ void BulletManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("queue_delete_bullet", "bullet_id"), &BulletManager::queue_delete_bullet);
 	ClassDB::bind_method(D_METHOD("clear"), &BulletManager::clear);
 
-	ClassDB::bind_method(D_METHOD("set_z_index", "z_index"), &BulletManager::set_z_index);
-	ClassDB::bind_method(D_METHOD("get_z_index"), &BulletManager::get_z_index);
 	ClassDB::bind_method(D_METHOD("set_bounds_margin", "bounds_margin"), &BulletManager::set_bounds_margin);
 	ClassDB::bind_method(D_METHOD("get_bounds_margin"), &BulletManager::get_bounds_margin);
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "z_index", PROPERTY_HINT_RANGE, itos(VS::CANVAS_ITEM_Z_MIN) + "," + itos(VS::CANVAS_ITEM_Z_MAX) + ",1"), "set_z_index", "get_z_index");
 	ADD_PROPERTY(PropertyInfo(Variant::REAL, "bounds_margin", PROPERTY_HINT_NONE), "set_bounds_margin", "get_bounds_margin");
 }

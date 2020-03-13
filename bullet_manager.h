@@ -110,9 +110,9 @@ public:
 };
 
 
-class BulletManager : public CanvasItem {
+class BulletManager : public Node2D {
 	
-	GDCLASS(BulletManager, CanvasItem)
+	GDCLASS(BulletManager, Node2D)
 	
 	Point2 pos;
     Size2 scale;
@@ -129,13 +129,6 @@ class BulletManager : public CanvasItem {
 	StringName _body_inout_name = StaticCString::create("_body_inout");
 	StringName _area_inout_name = StaticCString::create("_area_inout");
 
-	void BulletManager::_edit_set_position(const Point2 &p_position);
-	Point2 BulletManager::_edit_get_position() const;	
-	void BulletManager::_edit_set_scale(const Size2 &p_scale);
-	Size2 BulletManager::_edit_get_scale() const;
-
-	void set_z_index(int z_index);
-	int get_z_index() const;
 	void set_bounds_margin(float p_bounds_margin);
 	float get_bounds_margin() const;
 	void _update_bullets();
@@ -162,7 +155,7 @@ public:
 	int count();
 	void register_bullet_type(BulletManagerBulletType* type);
 	void unregister_bullet_type(BulletManagerBulletType* type);
-	Transform2D get_transform() const;
+
 
 };
 #endif
