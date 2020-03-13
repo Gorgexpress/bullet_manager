@@ -133,8 +133,6 @@ class BulletManager : public Node2D {
 	float get_bounds_margin() const;
 	void _update_bullets();
 	void _draw_bullets();
-	void _draw_editor_hint();
-	void _draw_bullet_type(BulletManagerBulletType* type, int &offset_y);
 	void _get_visible_rect(Rect2 &rect);
 
 protected:

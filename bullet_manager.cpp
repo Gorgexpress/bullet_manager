@@ -201,6 +201,7 @@ int BulletManagerBulletType::get_frame() const {
 
 void BulletManagerBulletType::set_centered(bool p_center) {
 	centered = p_center;
+	_change_notify();
 }
 
 bool BulletManagerBulletType::is_centered() const {
@@ -217,6 +218,7 @@ Point2 BulletManagerBulletType::get_offset() const {
 
 void BulletManagerBulletType::set_region(bool p_region) {
 	region = p_region;
+	_change_notify();
 }
 
 bool BulletManagerBulletType::is_region() const {
@@ -225,6 +227,7 @@ bool BulletManagerBulletType::is_region() const {
 
 void BulletManagerBulletType::set_region_rect(const Rect2 &p_region_rec) {
 	region_rect = p_region_rec;
+	_change_notify();
 }
 
 Rect2 BulletManagerBulletType::get_region_rect() const {
@@ -234,6 +237,7 @@ Rect2 BulletManagerBulletType::get_region_rect() const {
 void BulletManagerBulletType::set_rotate_visual(bool p_rotate_visual) {
 
 	rotate_visual = p_rotate_visual;
+	_change_notify();
 }
 
 bool BulletManagerBulletType::is_rotating_visual() const {
@@ -242,15 +246,8 @@ bool BulletManagerBulletType::is_rotating_visual() const {
 }
 
 void BulletManagerBulletType::set_collision_shape(const Ref<Shape2D> &p_shape) {
-
-	if (collision_shape.is_valid())
-		collision_shape->disconnect("changed", this, "_shape_changed");
 	collision_shape = p_shape;
-
-	if (collision_shape.is_valid())
-		collision_shape->connect("changed", this, "_shape_changed");
-
-	///update_configuration_warning();
+	_change_notify();
 }
 
 Ref<Shape2D> BulletManagerBulletType::get_collision_shape() const {
@@ -347,7 +344,24 @@ void BulletManagerBulletType::_notification(int p_what) {
 			}
 			_bullet_manager->unregister_bullet_type(this);
 			_bullet_manager = NULL;
-		}
+		} break;
+		case NOTIFICATION_DRAW: { 
+			if (!Engine::get_singleton()->is_editor_hint()) {
+				return;	
+			}
+			if (texture != NULL) {
+				_update_cached_rects();
+				texture->draw_rect_region(get_canvas_item(), _cached_dst_rect, _cached_src_rect, Color(1, 1, 1), false);
+			}
+			if (collision_shape != NULL && collision_shape.is_valid()) {
+				collision_shape->draw(get_canvas_item(), get_tree()->get_debug_collisions_color());
+			}
+		} break;
+		case NOTIFICATION_READY: {
+			if (!Engine::get_singleton()->is_editor_hint()) {
+				set_transform(Transform2D()); //don't want bullets to be drawn at an offset
+			}
+		} break;
 	}
 }
 void BulletManagerBulletType::_bind_methods() {
@@ -432,7 +446,7 @@ void BulletManager::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_DRAW: {
 			if (Engine::get_singleton()->is_editor_hint()) {
-				_draw_editor_hint();
+				return;
 			}
 			else {
 				_draw_bullets();
@@ -546,47 +560,6 @@ void BulletManager::_draw_bullets() {
 	}
 	
 	
-}
-
-//Draw all the bullet types.
-void BulletManager::_draw_editor_hint() {
-	if (types.empty()) {
-		return;
-	}
-	int offset_y = 0;
-	for (int i = 0; i < get_child_count(); i++) {
-
-		Node *child = get_child(i);
-
-		if (!Object::cast_to<BulletManagerBulletType>(child)) {
-			continue;
-		}
-		BulletManagerBulletType* type = Object::cast_to<BulletManagerBulletType>(child);
-		_draw_bullet_type(type, offset_y);
-	}
-
-}
-
-void BulletManager::_draw_bullet_type(BulletManagerBulletType* type, int &offset_y) {
-	if (type->texture.is_null()) {
-		return;
-	}
-	type->_update_cached_rects();
-	offset_y -= MIN(type->_cached_dst_rect.position.y, 0);
-	draw_set_transform(Point2(0, offset_y), 0, Size2(1, 1));
-	draw_texture_rect_region(type->texture, type->_cached_dst_rect, type->_cached_src_rect, Color(1, 1, 1), false);
-	real_t start_x = type->_cached_dst_rect.position.x;
-	real_t start_y = type->_cached_dst_rect.position.y;
-	real_t half_x = type->_cached_dst_rect.position.x + type->_cached_dst_rect.size.x / 2.0;
-	real_t half_y = type->_cached_dst_rect.position.y + type->_cached_dst_rect.size.y / 2.0;
-	real_t end_x = type->_cached_dst_rect.position.x + type->_cached_dst_rect.size.x;
-	real_t end_y = type->_cached_dst_rect.position.y + type->_cached_dst_rect.size.y;
-	Color debug_color = Color(0.0, 0.0, 0.0, 0.25);
-	draw_line(Point2(start_x, half_y), Point2(end_x, half_y), debug_color);
-	draw_line(Point2(half_x, start_y), Point2(half_x, end_y), debug_color);
-	draw_rect(type->_cached_dst_rect, debug_color, false);
-	offset_y += type->_cached_dst_rect.size.y + 2 + 1;
-	type->collision_shape->draw(get_canvas_item(), get_tree()->get_debug_collisions_color());
 }
 
 void BulletManager::_update_bullets() {
