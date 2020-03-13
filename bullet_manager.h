@@ -19,14 +19,11 @@ class BulletManagerBullet : public Object {
 	Vector2 direction;
 	real_t speed = 0;
     int id; //also servers as index into bullets array in bulletmanager
-	RID area;
+	int shape_index;
 	bool is_queued_for_deletion = false;
 	BulletManagerBulletType* type;
 public:
 	
-
-	void _area_inout(int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape);
-	void _body_inout(int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape);
 	void set_position(Point2 position);
 	Point2 get_position() const;
     void set_direction(Vector2 direction);
@@ -35,9 +32,7 @@ public:
     real_t get_angle() const;
     void set_speed(real_t speed);
     real_t get_speed() const;
-    void set_type(Node* bullet_manager_bullet_type);
     Node* get_type() const;
-    void queue_delete();
 protected:
 	static void _bind_methods();
 
@@ -61,12 +56,19 @@ class BulletManagerBulletType : public Node2D {
 	uint32_t collision_mask = 0;
 	uint32_t collision_layer = 0;
 	bool rotate_physics = false;
+
+	RID area;
+	Vector<int> _shapes;
+	List<int> _unused_shapes;
 	//These remaining private members are used by BulletManager to cache info.
 	friend class BulletManager;
 	Rect2 _cached_src_rect;
 	Rect2 _cached_dst_rect;
 	BulletManager* _bullet_manager;
 	void _update_cached_rects();
+
+	StringName _body_inout_name = StaticCString::create("_body_inout");
+	StringName _area_inout_name = StaticCString::create("_area_inout");
 	
 	
 protected:
@@ -104,8 +106,11 @@ public:
 	void set_collision_shape(const Ref<Shape2D> &p_shape);
 	Ref<Shape2D> get_collision_shape() const;
 
-	void area_inout(int bullet_id, int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape);
-	void body_inout(int bullet_id, int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape);
+	int add_shape(int bullet_idx, Transform2D transform);
+	void remove_shape(int shape_idx);
+
+	void _area_inout(int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape);
+	void _body_inout(int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape);
 
 };
 
@@ -126,8 +131,7 @@ class BulletManager : public Node2D {
 	
 	Map<StringName, BulletManagerBulletType*> types;
 
-	StringName _body_inout_name = StaticCString::create("_body_inout");
-	StringName _area_inout_name = StaticCString::create("_area_inout");
+	
 
 	void set_bounds_margin(float p_bounds_margin);
 	float get_bounds_margin() const;
@@ -148,6 +152,7 @@ public:
 	real_t get_bullet_speed(int bullet_id) const;
 	void set_bullet_angle(int bullet_id, real_t speed);
 	real_t get_bullet_angle(int bullet_id) const;
+	bool is_bullet_active(int bullet_id) const;
 	void queue_delete_bullet(int bullet_id);
 	void clear();
 	int count();

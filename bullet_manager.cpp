@@ -6,25 +6,6 @@
 #include "scene/main/scene_tree.h"
 #include "scene/main/viewport.h"
 
-void BulletManagerBullet::queue_delete() {
-    is_queued_for_deletion = true;
-    Physics2DServer::get_singleton()->area_set_collision_layer(area, 0);
-    Physics2DServer::get_singleton()->area_set_collision_mask(area, 0);
-    //Physics2DServer::get_singleton()->area_set_shape_disabled(area, 0, true);
-}
-void BulletManagerBullet::_area_inout(int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape) {
-	if (is_queued_for_deletion) {
-        return;
-    }
-	type->area_inout(id, p_status, p_area, p_instance, p_area_shape, p_self_shape );
-}
-void BulletManagerBullet::_body_inout(int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape) {
-    if (is_queued_for_deletion) {
-        return;
-    }
-	type->body_inout(id, p_status, p_body, p_instance, p_body_shape, p_area_shape );
-}
-
 void BulletManagerBullet::set_position(Point2 position) {
 	matrix.set_origin(position);
 }
@@ -32,8 +13,6 @@ void BulletManagerBullet::set_position(Point2 position) {
 Point2 BulletManagerBullet::get_position() const {
 	return matrix.get_origin();
 }
-
-
 
 void BulletManagerBullet::set_direction(Vector2 direction) {
     this->direction = direction;
@@ -68,30 +47,11 @@ real_t BulletManagerBullet::get_speed() const {
     return speed;
 }
 
-void BulletManagerBullet::set_type(Node* bullet_manager_bullet_type) {
-    //Setting the type to one belonging to a different BulletManager isn't supported, and I don't see a good reason to support it.
-    ERR_FAIL_COND(this->type->get_parent() != type->get_parent());
-    BulletManagerBulletType* type = Object::cast_to<BulletManagerBulletType>(bullet_manager_bullet_type);
-    Physics2DServer* ps = Physics2DServer::get_singleton();
-    if (!is_queued_for_deletion) {
-        //Don't want to undo the layer and mask being set to 0 when scheduled for deletion
-        //Honestly, returning immediately if the bullet is queued for deletion might be a better idea. 
-        ps->area_set_collision_layer(area, type->get_collision_layer());
-	    ps->area_set_collision_mask(area, type->get_collision_mask());
-    }
-	
-    ps->area_clear_shapes(area);
-    ps->area_add_shape(area, type->get_collision_shape()->get_rid());
-    this->type = type;
-}
-
 Node* BulletManagerBullet::get_type() const  {
     return type;
 }
 
 void BulletManagerBullet::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("_body_inout"), &BulletManagerBullet::_body_inout);
-	ClassDB::bind_method(D_METHOD("_area_inout"), &BulletManagerBullet::_area_inout);
     ClassDB::bind_method(D_METHOD("set_position"), &BulletManagerBullet::set_position);
 	ClassDB::bind_method(D_METHOD("get_position"), &BulletManagerBullet::get_position);
 	ClassDB::bind_method(D_METHOD("set_direction", "direction"), &BulletManagerBullet::set_direction);
@@ -100,16 +60,13 @@ void BulletManagerBullet::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_angle"), &BulletManagerBullet::get_angle);
     ClassDB::bind_method(D_METHOD("set_speed", "speed"), &BulletManagerBullet::set_speed);
 	ClassDB::bind_method(D_METHOD("get_speed"), &BulletManagerBullet::get_speed);
-    ClassDB::bind_method(D_METHOD("set_type", "bullet_manager_bullet_type"), &BulletManagerBullet::set_type);
 	ClassDB::bind_method(D_METHOD("get_type"), &BulletManagerBullet::get_type);
-    ClassDB::bind_method(D_METHOD("queue_delete"), &BulletManagerBullet::queue_delete);
 
     //I'm assuming I don't need property hints for this...
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "position", PROPERTY_HINT_NONE), "set_position", "get_position");
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "direction", PROPERTY_HINT_NONE), "set_direction", "get_direction");
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "angle", PROPERTY_HINT_NONE), "set_angle", "get_angle");
     ADD_PROPERTY(PropertyInfo(Variant::REAL, "speed", PROPERTY_HINT_NONE), "set_speed", "get_speed");
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "type", PROPERTY_HINT_NONE), "set_type", "get_type");
 
 }
 
@@ -258,7 +215,7 @@ Ref<Shape2D> BulletManagerBulletType::get_collision_shape() const {
 void BulletManagerBulletType::set_collision_mask(uint32_t p_mask) {
 
 	collision_mask = p_mask;
-	//Physics2DServer::get_singleton()->area_set_collision_mask(get_rid(), p_mask);
+	Physics2DServer::get_singleton()->area_set_collision_mask(area, collision_mask);
 }
 
 uint32_t BulletManagerBulletType::get_collision_mask() const {
@@ -269,7 +226,8 @@ uint32_t BulletManagerBulletType::get_collision_mask() const {
 void BulletManagerBulletType::set_collision_layer(uint32_t p_layer) {
 
 	collision_layer = p_layer;
-	//Physics2DServer::get_singleton()->area_set_collision_layer(get_rid(), p_layer);
+	Physics2DServer::get_singleton()->area_set_collision_layer(area, collision_layer);
+	
 }
 
 uint32_t BulletManagerBulletType::get_collision_layer() const {
@@ -320,13 +278,46 @@ void BulletManagerBulletType::_update_cached_rects()  {
 		r_dst_rect.size.y = -r_dst_rect.size.y;*/
 }
 
-void BulletManagerBulletType::area_inout(int bullet_id, int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape) {
+void BulletManagerBulletType::_area_inout(int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape) {
+	ERR_FAIL_COND(p_self_shape >= _shapes.size());
 	Object* collider = ObjectDB::get_instance(p_instance);
-	emit_signal("area_entered_bullet", bullet_id, collider);
+	int bullet_id = _shapes[p_self_shape];
+	if (bullet_id != -1 && _bullet_manager->is_bullet_active(bullet_id)) {
+		emit_signal("area_entered_bullet", bullet_id, collider);
+	}
 }
-void BulletManagerBulletType::body_inout(int bullet_id, int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape) {
+void BulletManagerBulletType::_body_inout(int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape) {
+	ERR_FAIL_COND(p_area_shape >= _shapes.size());
 	Object* collider = ObjectDB::get_instance(p_instance);
-	emit_signal("body_entered_bullet", bullet_id, collider);
+	int bullet_id = _shapes[p_area_shape];
+	if (bullet_id != -1 && _bullet_manager->is_bullet_active(bullet_id)) {
+		emit_signal("body_entered_bullet", bullet_id, collider);
+	}
+	
+}
+
+int BulletManagerBulletType::add_shape(int bullet_idx, Transform2D transform) {
+	if (_unused_shapes.size() == 0) {
+		Physics2DServer::get_singleton()->area_add_shape(area, collision_shape->get_rid(), transform);
+		_shapes.push_back(bullet_idx);
+		return _shapes.size() - 1;
+	} else {
+		int shape_idx = _unused_shapes.front()->get();
+		_unused_shapes.pop_front();
+		Physics2DServer::get_singleton()->area_set_shape_transform(area, shape_idx, transform);
+		Physics2DServer::get_singleton()->area_set_shape_disabled(area, shape_idx, false);
+		_shapes.set(shape_idx, bullet_idx);
+		return shape_idx;
+	}
+}
+
+void BulletManagerBulletType::remove_shape(int shape_idx) {
+	if (shape_idx >= _shapes.size()) {
+		return;
+	}
+	Physics2DServer::get_singleton()->area_set_shape_disabled(area, shape_idx, true);
+	_shapes.set(shape_idx, -1);
+	_unused_shapes.push_back(shape_idx);
 }
 
 void BulletManagerBulletType::_notification(int p_what) {
@@ -357,9 +348,21 @@ void BulletManagerBulletType::_notification(int p_what) {
 				collision_shape->draw(get_canvas_item(), get_tree()->get_debug_collisions_color());
 			}
 		} break;
-		case NOTIFICATION_READY: {
+		case NOTIFICATION_ENTER_TREE: {
 			if (!Engine::get_singleton()->is_editor_hint()) {
 				set_transform(Transform2D()); //don't want bullets to be drawn at an offset
+			}
+			Physics2DServer* ps = Physics2DServer::get_singleton();
+			area = ps->area_create();
+			ps->area_set_space(area, get_world_2d()->get_space());
+			ps->area_set_transform(area, Transform2D());
+			ps->area_attach_object_instance_id(area, get_instance_id());
+			ps->area_set_monitor_callback(area, this, _body_inout_name);
+			ps->area_set_area_monitor_callback(area, this, _area_inout_name);
+			ps->area_set_collision_layer(area, collision_layer);
+			ps->area_set_collision_mask(area, collision_mask);
+			if (is_inside_tree()) {
+				
 			}
 		} break;
 	}
@@ -394,6 +397,10 @@ void BulletManagerBulletType::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_region_filter_clip_enabled"), &Sprite::is_region_filter_clip_enabled);*/
 	
 	//PHYSICS
+	ClassDB::bind_method(D_METHOD("_body_inout"), &BulletManagerBulletType::_body_inout);
+	ClassDB::bind_method(D_METHOD("_area_inout"), &BulletManagerBulletType::_area_inout);
+	ClassDB::bind_method(D_METHOD("set_texture", "texture"), &BulletManagerBulletType::set_texture);
+	ClassDB::bind_method(D_METHOD("get_texture"), &BulletManagerBulletType::get_texture);
 	ClassDB::bind_method(D_METHOD("set_collision_shape", "collision_shape"), &BulletManagerBulletType::set_collision_shape);
 	ClassDB::bind_method(D_METHOD("get_collision_shape"), &BulletManagerBulletType::get_collision_shape);
 	ClassDB::bind_method(D_METHOD("set_collision_layer", "collision_layer"), &BulletManagerBulletType::set_collision_layer);
@@ -469,17 +476,8 @@ int BulletManager::add_bullet(StringName type_name, Vector2 position, real_t ang
 		bullet = memnew(BulletManagerBullet);
 		bullet->id = _bullets.size();
 		_bullets.push_back(bullet);
-		RID area = ps->area_create();
-		ps->area_attach_object_instance_id(area, bullet->get_instance_id());
-		ps->area_set_monitor_callback(area, bullet, _body_inout_name);
-		ps->area_set_area_monitor_callback(area, bullet, _area_inout_name);
-		ps->area_set_transform(area, bullet->matrix);
-		ps->area_add_shape(area, type->collision_shape->get_rid());
-		if (is_inside_tree()) {
-			RID space = get_world_2d()->get_space();
-			Physics2DServer::get_singleton()->area_set_space(area, space);
-		}
-		bullet->area = area;
+		
+		
 	} else {
 		int id = _unused_ids.front()->get();
 		_unused_ids.pop_front();
@@ -491,10 +489,7 @@ int BulletManager::add_bullet(StringName type_name, Vector2 position, real_t ang
 	bullet->speed = speed;
 	bullet->matrix.elements[2] = position;
 	bullet->is_queued_for_deletion = false;
-	ps->area_set_transform(bullet->area, bullet->matrix);
-	ps->area_set_collision_layer(bullet->area, type->collision_layer);
-	ps->area_set_collision_mask(bullet->area, type->collision_mask);
-	ps->area_set_shape_disabled(bullet->area, 0, false);
+	bullet->shape_index = type->add_shape(bullet->id, bullet->matrix);
 	_active_bullets.push_back(bullet);
 	return bullet->id;
 }
@@ -505,7 +500,7 @@ void BulletManager::clear()
 	List<BulletManagerBullet*>::Element *E = _active_bullets.front();
 	while(E) {
 		BulletManagerBullet* bullet = E->get();
-		bullet->queue_delete();
+		bullet->is_queued_for_deletion = true;
 		E = E->next();
 	}
 }
@@ -555,6 +550,7 @@ void BulletManager::_draw_bullets() {
 			//draw_set_transform_matrix(bullet->matrix);
 		}
 		vs->canvas_item_add_texture_rect_region(ci, type->_cached_dst_rect, type->texture->get_rid(), type->_cached_src_rect);
+		//type->collision_shape->draw(ci, get_tree()->get_debug_collisions_color());
 		//draw_texture_rect_region(type->texture, type->_cached_dst_rect, type->_cached_src_rect, Color(1, 1, 1), false, type->normal_map);
 		E = E->next();
 	}
@@ -575,21 +571,19 @@ void BulletManager::_update_bullets() {
 		while(E) {
 			BulletManagerBullet* bullet = E->get();
 			if(bullet->is_queued_for_deletion) {
-				ps->area_set_shape_disabled(bullet->area, 0, true);
+				bullet->type->remove_shape(bullet->shape_index);
 				_unused_ids.push_front(bullet->id);
 				E->erase();
 			} else if (!visible_rect.has_point(bullet->matrix.get_origin())) {
 				bullet->type->emit_signal("bullet_clipped", bullet->id);
 				bullet->is_queued_for_deletion = true;
 				_unused_ids.push_front(bullet->id);
-				ps->area_set_collision_layer(bullet->area, 0);
-				ps->area_set_collision_mask(bullet->area, 0);
-				ps->area_set_shape_disabled(bullet->area, 0, true);
+				bullet->type->remove_shape(bullet->shape_index);
 				E->erase();
 			}
 			else {
 				bullet->matrix[2] += bullet->direction * bullet->speed  * delta;
-				ps->area_set_transform(bullet->area, bullet->matrix);
+				ps->area_set_shape_transform(bullet->type->area, bullet->shape_index, bullet->matrix);
 			}
 			E = E->next();
 		}
@@ -657,9 +651,14 @@ void BulletManager::queue_delete_bullet(int bullet_id) {
 	if (bullet_id < _bullets.size()) {
 		BulletManagerBullet* bullet = _bullets[bullet_id];
 		bullet->is_queued_for_deletion = true;
-		Physics2DServer::get_singleton()->area_set_collision_layer(bullet->area, 0);
-    	Physics2DServer::get_singleton()->area_set_collision_mask(bullet->area, 0);
 	}
+}
+
+bool BulletManager::is_bullet_active(int bullet_id) const {
+	if (bullet_id < _bullets.size()) {
+		return !_bullets[bullet_id]->is_queued_for_deletion;
+	}
+	return false;
 }
 
 void BulletManager::_bind_methods() {
