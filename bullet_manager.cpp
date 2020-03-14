@@ -305,6 +305,19 @@ void BulletManagerBulletType::remove_shape(int shape_idx) {
 	_unused_shapes.push_back(shape_idx);
 }
 
+void BulletManagerBulletType::custom_update() {
+	if(!has_custom_update) {
+		return;
+	}
+	Array indices;
+	for(int i = 0; i < _shapes.size(); i++) {
+		if (_shapes[i] != -1) {
+			indices.push_back(_shapes[i]);
+		}
+	}
+	get_script_instance()->call("_update", indices);
+}
+
 void BulletManagerBulletType::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_PARENTED: {
@@ -346,8 +359,14 @@ void BulletManagerBulletType::_notification(int p_what) {
 			ps->area_set_area_monitor_callback(area, this, _area_inout_name);
 			ps->area_set_collision_layer(area, collision_layer);
 			ps->area_set_collision_mask(area, collision_mask);
-			if (is_inside_tree()) {
-				
+		} break;
+		case NOTIFICATION_EXIT_TREE: {
+			Physics2DServer::get_singleton()->free(area);
+		}
+		case NOTIFICATION_READY: {
+			if (get_script_instance() &&  get_script_instance()->has_method("_update")) {
+				print_line("has_custom_update");
+				has_custom_update = true;
 			}
 		} break;
 	}
@@ -572,7 +591,14 @@ void BulletManager::_update_bullets() {
 		}
 		E = E->next();
 	}
-	
+	Map<StringName, BulletManagerBulletType*>::Element * T = types.front();
+	while(T) {
+		BulletManagerBulletType* type = T->get();
+		if (type->has_custom_update) {
+			type->custom_update();
+		}
+		T = T->next();
+	}
 	update();
 }
 
@@ -632,6 +658,19 @@ real_t BulletManager::get_bullet_angle(int bullet_id) const {
 	return 0.0;
 }
 
+void BulletManager::set_bullet_custom_data(int bullet_id, Variant custom_data) {
+	if (bullet_id < _bullets.size()) {
+		_bullets.write[bullet_id].custom_data = custom_data;
+	}
+}
+
+Variant BulletManager::get_bullet_custom_data(int bullet_id) const {
+	if (bullet_id < _bullets.size()) {
+		return _bullets[bullet_id].custom_data;
+	}
+	return false;
+}
+
 void BulletManager::queue_delete_bullet(int bullet_id) {
 	if (bullet_id < _bullets.size()) {
 		_bullets.write[bullet_id].is_queued_for_deletion = true;
@@ -645,6 +684,8 @@ bool BulletManager::is_bullet_active(int bullet_id) const {
 	return false;
 }
 
+
+
 void BulletManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("add_bullet", "position", "angle","speed"), &BulletManager::add_bullet);
 	ClassDB::bind_method(D_METHOD("set_bullet_position", "bullet_id", "position"), &BulletManager::set_bullet_position);
@@ -653,6 +694,8 @@ void BulletManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_bullet_speed", "bullet_id"), &BulletManager::get_bullet_speed);
 	ClassDB::bind_method(D_METHOD("set_bullet_angle", "bullet_id", "angle"), &BulletManager::set_bullet_angle);
 	ClassDB::bind_method(D_METHOD("get_bullet_angle", "bullet_id"), &BulletManager::get_bullet_angle);
+	ClassDB::bind_method(D_METHOD("set_bullet_custom_data", "bullet_id", "variant"), &BulletManager::set_bullet_custom_data);
+	ClassDB::bind_method(D_METHOD("get_bullet_custom_data", "bullet_id"), &BulletManager::get_bullet_custom_data);
 	ClassDB::bind_method(D_METHOD("queue_delete_bullet", "bullet_id"), &BulletManager::queue_delete_bullet);
 	ClassDB::bind_method(D_METHOD("clear"), &BulletManager::clear);
 

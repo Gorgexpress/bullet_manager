@@ -28,6 +28,7 @@ class BulletManagerBulletType : public Node2D {
 	uint32_t collision_mask = 0;
 	uint32_t collision_layer = 0;
 	bool rotate_physics = false;
+	bool has_custom_update = false;
 
 	RID area;
 	Vector<int> _shapes;
@@ -81,6 +82,8 @@ public:
 	int add_shape(int bullet_idx, Transform2D transform);
 	void remove_shape(int shape_idx);
 
+	void custom_update();
+
 	void _area_inout(int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape);
 	void _body_inout(int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape);
 
@@ -94,6 +97,7 @@ struct BulletManagerBullet {
     int id; //also servers as index into bullets array in bulletmanager
 	int shape_index;
 	bool is_queued_for_deletion = false;
+	Variant custom_data;
 	BulletManagerBulletType* type;
 	void set_position(Point2 position);
 	Point2 get_position() const;
@@ -146,6 +150,8 @@ public:
 	void set_bullet_angle(int bullet_id, real_t speed);
 	real_t get_bullet_angle(int bullet_id) const;
 	bool is_bullet_active(int bullet_id) const;
+	Variant get_bullet_custom_data(int bullet_id) const;
+	void set_bullet_custom_data(int bullet_id, Variant custom_data);
 	void queue_delete_bullet(int bullet_id);
 	void clear();
 	int count();
