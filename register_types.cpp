@@ -6,7 +6,6 @@
 
 void register_bullet_manager_types() {
     ClassDB::register_class<BulletManagerBulletType>();
-    ClassDB::register_class<BulletManagerBullet>();
     ClassDB::register_class<BulletManager>();
 	
 }

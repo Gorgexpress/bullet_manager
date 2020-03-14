@@ -47,27 +47,12 @@ real_t BulletManagerBullet::get_speed() const {
     return speed;
 }
 
-Node* BulletManagerBullet::get_type() const  {
-    return type;
+void BulletManagerBullet::queue_delete() {
+	is_queued_for_deletion = true;
 }
 
-void BulletManagerBullet::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("set_position"), &BulletManagerBullet::set_position);
-	ClassDB::bind_method(D_METHOD("get_position"), &BulletManagerBullet::get_position);
-	ClassDB::bind_method(D_METHOD("set_direction", "direction"), &BulletManagerBullet::set_direction);
-	ClassDB::bind_method(D_METHOD("get_direction"), &BulletManagerBullet::get_direction);
-    ClassDB::bind_method(D_METHOD("set_angle", "angle"), &BulletManagerBullet::set_angle);
-	ClassDB::bind_method(D_METHOD("get_angle"), &BulletManagerBullet::get_angle);
-    ClassDB::bind_method(D_METHOD("set_speed", "speed"), &BulletManagerBullet::set_speed);
-	ClassDB::bind_method(D_METHOD("get_speed"), &BulletManagerBullet::get_speed);
-	ClassDB::bind_method(D_METHOD("get_type"), &BulletManagerBullet::get_type);
-
-    //I'm assuming I don't need property hints for this...
-	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "position", PROPERTY_HINT_NONE), "set_position", "get_position");
-    ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "direction", PROPERTY_HINT_NONE), "set_direction", "get_direction");
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "angle", PROPERTY_HINT_NONE), "set_angle", "get_angle");
-    ADD_PROPERTY(PropertyInfo(Variant::REAL, "speed", PROPERTY_HINT_NONE), "set_speed", "get_speed");
-
+Node* BulletManagerBullet::get_type() const  {
+    return type;
 }
 
 void BulletManagerBulletType::set_texture(const Ref<Texture> &p_texture) {
@@ -312,7 +297,7 @@ int BulletManagerBulletType::add_shape(int bullet_idx, Transform2D transform) {
 }
 
 void BulletManagerBulletType::remove_shape(int shape_idx) {
-	if (shape_idx >= _shapes.size()) {
+	if (shape_idx >= _shapes.size() || shape_idx < 0) {
 		return;
 	}
 	Physics2DServer::get_singleton()->area_set_shape_disabled(area, shape_idx, true);
@@ -399,8 +384,6 @@ void BulletManagerBulletType::_bind_methods() {
 	//PHYSICS
 	ClassDB::bind_method(D_METHOD("_body_inout"), &BulletManagerBulletType::_body_inout);
 	ClassDB::bind_method(D_METHOD("_area_inout"), &BulletManagerBulletType::_area_inout);
-	ClassDB::bind_method(D_METHOD("set_texture", "texture"), &BulletManagerBulletType::set_texture);
-	ClassDB::bind_method(D_METHOD("get_texture"), &BulletManagerBulletType::get_texture);
 	ClassDB::bind_method(D_METHOD("set_collision_shape", "collision_shape"), &BulletManagerBulletType::set_collision_shape);
 	ClassDB::bind_method(D_METHOD("get_collision_shape"), &BulletManagerBulletType::get_collision_shape);
 	ClassDB::bind_method(D_METHOD("set_collision_layer", "collision_layer"), &BulletManagerBulletType::set_collision_layer);
@@ -473,15 +456,14 @@ int BulletManager::add_bullet(StringName type_name, Vector2 position, real_t ang
 	BulletManagerBulletType* type = types[type_name];
 	BulletManagerBullet* bullet;
 	if (_unused_ids.size() == 0) {
-		bullet = memnew(BulletManagerBullet);
-		bullet->id = _bullets.size();
-		_bullets.push_back(bullet);
-		
-		
+		BulletManagerBullet new_bullet;
+		new_bullet.id = _bullets.size();
+		_bullets.push_back(new_bullet);
+		bullet = &_bullets.write[new_bullet.id];
 	} else {
 		int id = _unused_ids.front()->get();
 		_unused_ids.pop_front();
-		bullet = _bullets[id];
+		bullet = &_bullets.write[id];
 	}
 	ERR_FAIL_COND_V(_active_bullets.size() >= _bullets.size(), NULL);
 	bullet->type = type;
@@ -490,17 +472,17 @@ int BulletManager::add_bullet(StringName type_name, Vector2 position, real_t ang
 	bullet->matrix.elements[2] = position;
 	bullet->is_queued_for_deletion = false;
 	bullet->shape_index = type->add_shape(bullet->id, bullet->matrix);
-	_active_bullets.push_back(bullet);
+	
+	_active_bullets.push_back(bullet->id);
 	return bullet->id;
 }
 
 void BulletManager::clear()
 {
 	Physics2DServer *ps = Physics2DServer::get_singleton();
-	List<BulletManagerBullet*>::Element *E = _active_bullets.front();
+	List<int>::Element *E = _active_bullets.front();
 	while(E) {
-		BulletManagerBullet* bullet = E->get();
-		bullet->is_queued_for_deletion = true;
+		_bullets.write[E->get()].is_queued_for_deletion = true;
 		E = E->next();
 	}
 }
@@ -531,11 +513,11 @@ void BulletManager::_draw_bullets() {
 	if (_active_bullets.size() == 0) {
 		return;
 	}
-	List<BulletManagerBullet*>::Element *E = _active_bullets.front();
+	List<int>::Element *E = _active_bullets.front();
 	//for(int i = 0; i < bullets.size(); i++) {
 	while(E) {
 		//Bullet* bullet = r[i];
-		BulletManagerBullet* bullet = E->get();
+		BulletManagerBullet* bullet = &_bullets.write[E->get()];
 		BulletManagerBulletType* type = bullet->type;
 		RID ci = type->get_canvas_item();
 		if (type->rotate_visual) {
@@ -566,28 +548,31 @@ void BulletManager::_update_bullets() {
 	Rect2 visible_rect;
 	_get_visible_rect(visible_rect);
 	visible_rect = visible_rect.grow(bounds_margin);
-	{
-		List<BulletManagerBullet*>::Element *E = _active_bullets.front();
-		while(E) {
-			BulletManagerBullet* bullet = E->get();
-			if(bullet->is_queued_for_deletion) {
-				bullet->type->remove_shape(bullet->shape_index);
-				_unused_ids.push_front(bullet->id);
-				E->erase();
-			} else if (!visible_rect.has_point(bullet->matrix.get_origin())) {
-				bullet->type->emit_signal("bullet_clipped", bullet->id);
-				bullet->is_queued_for_deletion = true;
-				_unused_ids.push_front(bullet->id);
-				bullet->type->remove_shape(bullet->shape_index);
-				E->erase();
+	for(int i = 0; i < _bullets.size(); i++) {
+		if(!_bullets[i].is_queued_for_deletion) {
+			_bullets.write[i].matrix[2] += _bullets[i].direction * _bullets[i].speed  * delta;
+			if (!visible_rect.has_point(_bullets[i].matrix.get_origin())) {
+				_bullets.write[i].is_queued_for_deletion = true;
+				_bullets[i].type->emit_signal("bullet_clipped", _bullets[i].id);
 			}
-			else {
-				bullet->matrix[2] += bullet->direction * bullet->speed  * delta;
-				ps->area_set_shape_transform(bullet->type->area, bullet->shape_index, bullet->matrix);
-			}
-			E = E->next();
 		}
 	}
+	
+	List<int>::Element *E = _active_bullets.front();
+	while(E) {
+		int idx = E->get();
+		if( _bullets[idx].is_queued_for_deletion) {
+			_bullets[idx].type->remove_shape(_bullets[idx].shape_index);
+			_unused_ids.push_front(_bullets[idx].id);
+			E->erase();
+		}
+		else {
+			//bullet->matrix[2] += bullet->direction * bullet->speed  * delta;
+			ps->area_set_shape_transform(_bullets[idx].type->area, _bullets[idx].shape_index, _bullets[idx].matrix);
+		}
+		E = E->next();
+	}
+	
 	update();
 }
 
@@ -610,53 +595,52 @@ void BulletManager::_get_visible_rect(Rect2& rect)
 
 void BulletManager::set_bullet_position(int bullet_id, Vector2 position) {
 	if (bullet_id < _bullets.size()) {
-		_bullets[bullet_id]->matrix.set_origin(position);
+		_bullets.write[bullet_id].matrix.set_origin(position);
 	}
 }
 
 Vector2 BulletManager::get_bullet_position(int bullet_id) const {
 	if (bullet_id < _bullets.size()) {
-		return _bullets[bullet_id]->matrix.get_origin();
+		return _bullets[bullet_id].matrix.get_origin();
 	}
 	return Vector2();
 }
 
 void BulletManager::set_bullet_speed(int bullet_id, real_t speed) {
 	if (bullet_id < _bullets.size()) {
-		_bullets[bullet_id]->speed = speed;
+		_bullets.write[bullet_id].speed = speed;
 	}
 }
 
 real_t BulletManager::get_bullet_speed(int bullet_id) const {
 	if (bullet_id < _bullets.size()) {
-		return _bullets[bullet_id]->speed;
+		return _bullets[bullet_id].speed;
 	}
 	return 0.0;
 }
 
 void BulletManager::set_bullet_angle(int bullet_id, real_t angle) {
 	if (bullet_id < _bullets.size()) {
-		_bullets[bullet_id]->set_angle(angle);
+		_bullets.write[bullet_id].set_angle(angle);
 	}
 }
 
 real_t BulletManager::get_bullet_angle(int bullet_id) const {
 	if (bullet_id < _bullets.size()) {
-		return _bullets[bullet_id]->direction.angle();
+		return _bullets[bullet_id].direction.angle();
 	}
 	return 0.0;
 }
 
 void BulletManager::queue_delete_bullet(int bullet_id) {
 	if (bullet_id < _bullets.size()) {
-		BulletManagerBullet* bullet = _bullets[bullet_id];
-		bullet->is_queued_for_deletion = true;
+		_bullets.write[bullet_id].is_queued_for_deletion = true;
 	}
 }
 
 bool BulletManager::is_bullet_active(int bullet_id) const {
 	if (bullet_id < _bullets.size()) {
-		return !_bullets[bullet_id]->is_queued_for_deletion;
+		return !_bullets[bullet_id].is_queued_for_deletion;
 	}
 	return false;
 }

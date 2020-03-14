@@ -9,34 +9,6 @@
 #include "scene/resources/shape_2d.h"
 
 
-class BulletManagerBullet : public Object {
-	
-	GDCLASS(BulletManagerBullet, Object)
-
-    friend class BulletManager;
-    friend class BulletManagerBulletType;
-    Transform2D matrix;
-	Vector2 direction;
-	real_t speed = 0;
-    int id; //also servers as index into bullets array in bulletmanager
-	int shape_index;
-	bool is_queued_for_deletion = false;
-	BulletManagerBulletType* type;
-public:
-	
-	void set_position(Point2 position);
-	Point2 get_position() const;
-    void set_direction(Vector2 direction);
-    Vector2 get_direction() const;
-    void set_angle(real_t angle);
-    real_t get_angle() const;
-    void set_speed(real_t speed);
-    real_t get_speed() const;
-    Node* get_type() const;
-protected:
-	static void _bind_methods();
-
-};
 
 class BulletManagerBulletType : public Node2D {
 	
@@ -115,6 +87,27 @@ public:
 };
 
 
+struct BulletManagerBullet {
+    Transform2D matrix = Transform2D();
+	Vector2 direction;
+	real_t speed;
+    int id; //also servers as index into bullets array in bulletmanager
+	int shape_index;
+	bool is_queued_for_deletion = false;
+	BulletManagerBulletType* type;
+	void set_position(Point2 position);
+	Point2 get_position() const;
+    void set_direction(Vector2 direction);
+    Vector2 get_direction() const;
+    void set_angle(real_t angle);
+    real_t get_angle() const;
+    void set_speed(real_t speed);
+    real_t get_speed() const;
+	void queue_delete();
+    Node* get_type() const;
+};
+
+
 class BulletManager : public Node2D {
 	
 	GDCLASS(BulletManager, Node2D)
@@ -124,9 +117,9 @@ class BulletManager : public Node2D {
 	int z_index = 0;
 	real_t bounds_margin = 300.0;
 	//pool of bullets both used and unused bullets
-	Vector<BulletManagerBullet*> _bullets;
+	Vector<BulletManagerBullet> _bullets;
 	//Active bullets only. A linked list allows constant time deletion in the middle of a list, without changing the order of the elements.
-	List<BulletManagerBullet*> _active_bullets; 
+	List<int> _active_bullets; 
 	List<int> _unused_ids; //bullet ids are indices into the bullets vector.
 	
 	Map<StringName, BulletManagerBulletType*> types;
