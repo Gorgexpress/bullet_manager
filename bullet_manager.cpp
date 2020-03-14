@@ -351,18 +351,14 @@ void BulletManagerBulletType::_notification(int p_what) {
 				set_transform(Transform2D()); //don't want bullets to be drawn at an offset
 			}
 			Physics2DServer* ps = Physics2DServer::get_singleton();
-			area = ps->area_create();
 			ps->area_set_space(area, get_world_2d()->get_space());
 			ps->area_set_transform(area, Transform2D());
-			ps->area_attach_object_instance_id(area, get_instance_id());
-			ps->area_set_monitor_callback(area, this, _body_inout_name);
-			ps->area_set_area_monitor_callback(area, this, _area_inout_name);
 			ps->area_set_collision_layer(area, collision_layer);
 			ps->area_set_collision_mask(area, collision_mask);
 		} break;
 		case NOTIFICATION_EXIT_TREE: {
-			Physics2DServer::get_singleton()->free(area);
-		}
+			Physics2DServer::get_singleton()->area_set_space(area, RID());
+		} break;
 		case NOTIFICATION_READY: {
 			if (get_script_instance() &&  get_script_instance()->has_method("_update")) {
 				print_line("has_custom_update");
@@ -439,6 +435,20 @@ void BulletManagerBulletType::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("body_entered_bullet", PropertyInfo(Variant::INT, "bullet_id", PROPERTY_HINT_NONE, "bullet_id"), PropertyInfo(Variant::OBJECT, "body", PROPERTY_HINT_RESOURCE_TYPE, "PhysicsBody2D")));
 	ADD_SIGNAL(MethodInfo("bullet_clipped", PropertyInfo(Variant::INT, "bullet_id", PROPERTY_HINT_NONE, "bullet_id")));
 
+}
+
+BulletManagerBulletType::BulletManagerBulletType() {
+	Physics2DServer* ps = Physics2DServer::get_singleton();
+	area = ps->area_create();
+	ps->area_set_transform(area, Transform2D());
+	ps->area_attach_object_instance_id(area, get_instance_id());
+	ps->area_set_monitor_callback(area, this, _body_inout_name);
+	ps->area_set_area_monitor_callback(area, this, _area_inout_name);
+}
+
+BulletManagerBulletType::~BulletManagerBulletType() {
+	if(area.is_valid())
+		Physics2DServer::get_singleton()->free(area);
 }
 
 void BulletManager::_notification(int p_what) {

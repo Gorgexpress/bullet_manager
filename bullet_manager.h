@@ -50,6 +50,8 @@ protected:
 
 public:
 
+	BulletManagerBulletType();
+	~BulletManagerBulletType();
 	void set_texture(const Ref<Texture> &p_texture);
 	Ref<Texture> get_texture() const;
 	void set_normal_map(const Ref<Texture> &p_normal_map);
