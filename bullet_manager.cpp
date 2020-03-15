@@ -333,6 +333,8 @@ void BulletManagerBulletType::_notification(int p_what) {
 			}
 			_bullet_manager->unregister_bullet_type(this);
 			_bullet_manager = NULL;
+			_shapes.clear();
+			_unused_shapes.clear();
 		} break;
 		case NOTIFICATION_DRAW: { 
 			if (!Engine::get_singleton()->is_editor_hint()) {
@@ -619,6 +621,7 @@ void BulletManager::register_bullet_type(BulletManagerBulletType* type) {
 }
 
 void BulletManager::unregister_bullet_type(BulletManagerBulletType* type) {
+	clear_by_type(type);
 	types.erase(type->get_name());
 }
 
