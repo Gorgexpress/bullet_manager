@@ -694,6 +694,27 @@ bool BulletManager::is_bullet_active(int bullet_id) const {
 	return false;
 }
 
+void BulletManager::clear_by_type(BulletManagerBulletType* type) {
+	for (int i = 0; i < _bullets.size(); i++) {
+		if (_bullets[i].type == type) 
+			_bullets.write[i].is_queued_for_deletion = true;
+	}
+}
+
+void BulletManager::clear_by_mask(int mask) {
+	for (int i = 0; i < _bullets.size(); i++) {
+		if (_bullets[i].type->collision_mask & mask > 0) 
+			_bullets.write[i].is_queued_for_deletion = true;
+	}
+}
+
+void BulletManager::clear_by_layer(int layer) {
+	for (int i = 0; i < _bullets.size(); i++) {
+		if (_bullets[i].type->collision_mask & layer > 0) 
+			_bullets.write[i].is_queued_for_deletion = true;
+	}
+}
+
 
 
 void BulletManager::_bind_methods() {
@@ -708,6 +729,9 @@ void BulletManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_bullet_custom_data", "bullet_id"), &BulletManager::get_bullet_custom_data);
 	ClassDB::bind_method(D_METHOD("queue_delete_bullet", "bullet_id"), &BulletManager::queue_delete_bullet);
 	ClassDB::bind_method(D_METHOD("clear"), &BulletManager::clear);
+	ClassDB::bind_method(D_METHOD("clear_by_type", "type"), &BulletManager::clear_by_type);
+	ClassDB::bind_method(D_METHOD("clear_by_mask", "mask"), &BulletManager::clear_by_mask);
+	ClassDB::bind_method(D_METHOD("clear_by_layer", "layer"), &BulletManager::clear_by_layer);
 
 	ClassDB::bind_method(D_METHOD("set_bounds_margin", "bounds_margin"), &BulletManager::set_bounds_margin);
 	ClassDB::bind_method(D_METHOD("get_bounds_margin"), &BulletManager::get_bounds_margin);

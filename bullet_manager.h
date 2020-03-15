@@ -156,6 +156,9 @@ public:
 	void set_bullet_custom_data(int bullet_id, Variant custom_data);
 	void queue_delete_bullet(int bullet_id);
 	void clear();
+	void clear_by_type(BulletManagerBulletType* type);
+	void clear_by_mask(int mask);
+	void clear_by_layer(int layer);
 	int count();
 	void register_bullet_type(BulletManagerBulletType* type);
 	void unregister_bullet_type(BulletManagerBulletType* type);
