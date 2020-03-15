@@ -318,6 +318,12 @@ void BulletManagerBulletType::custom_update() {
 	get_script_instance()->call("_update", indices);
 }
 
+int BulletManagerBulletType::get_bullet_id(int shape_index) {
+	if (shape_index < _shapes.size())
+		return _shapes[shape_index];
+	return -1;
+}
+
 void BulletManagerBulletType::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_PARENTED: {
@@ -409,6 +415,8 @@ void BulletManagerBulletType::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_collision_mask"), &BulletManagerBulletType::get_collision_mask);
 	ClassDB::bind_method(D_METHOD("set_rotate_physics", "enabled"), &BulletManagerBulletType::set_rotate_physics);
 	ClassDB::bind_method(D_METHOD("is_rotating_physics"), &BulletManagerBulletType::is_rotating_physics);
+
+	ClassDB::bind_method(D_METHOD("get_bullet_id", "shape_index"), &BulletManagerBulletType::get_bullet_id);
 	
 	//VISUAL PROPERTIES
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "texture", PROPERTY_HINT_RESOURCE_TYPE, "Texture"), "set_texture", "get_texture");

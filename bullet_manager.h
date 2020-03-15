@@ -80,6 +80,7 @@ public:
 	bool is_rotating_physics() const;
 	void set_collision_shape(const Ref<Shape2D> &p_shape);
 	Ref<Shape2D> get_collision_shape() const;
+	int get_bullet_id(int shape_index);
 
 	int add_shape(int bullet_idx, Transform2D transform);
 	void remove_shape(int shape_idx);
