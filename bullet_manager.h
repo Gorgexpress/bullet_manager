@@ -158,6 +158,7 @@ public:
 	void queue_delete_bullet(int bullet_id);
 	void clear();
 	void clear_by_type(BulletManagerBulletType* type);
+	void _clear_by_type_script(Object* type);
 	void clear_by_mask(int mask);
 	void clear_by_layer(int layer);
 	int count();

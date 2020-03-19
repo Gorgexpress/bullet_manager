@@ -712,16 +712,23 @@ void BulletManager::clear_by_type(BulletManagerBulletType* type) {
 	}
 }
 
+void BulletManager::_clear_by_type_script(Object* type) {
+	BulletManagerBulletType* castedType = Object::cast_to<BulletManagerBulletType>(type);
+	if(!castedType )
+		return;
+	clear_by_type(castedType);
+}
+
 void BulletManager::clear_by_mask(int mask) {
 	for (int i = 0; i < _bullets.size(); i++) {
-		if (_bullets[i].type->collision_mask & mask > 0) 
+		if ((_bullets[i].type->collision_mask & mask) > 0) 
 			_bullets.write[i].is_queued_for_deletion = true;
 	}
 }
 
 void BulletManager::clear_by_layer(int layer) {
 	for (int i = 0; i < _bullets.size(); i++) {
-		if (_bullets[i].type->collision_mask & layer > 0) 
+		if ((_bullets[i].type->collision_mask & layer) > 0) 
 			_bullets.write[i].is_queued_for_deletion = true;
 	}
 }
@@ -740,7 +747,7 @@ void BulletManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_bullet_custom_data", "bullet_id"), &BulletManager::get_bullet_custom_data);
 	ClassDB::bind_method(D_METHOD("queue_delete_bullet", "bullet_id"), &BulletManager::queue_delete_bullet);
 	ClassDB::bind_method(D_METHOD("clear"), &BulletManager::clear);
-	ClassDB::bind_method(D_METHOD("clear_by_type", "type"), &BulletManager::clear_by_type);
+	ClassDB::bind_method(D_METHOD("_clear_by_type_script", "type"), &BulletManager::_clear_by_type_script);
 	ClassDB::bind_method(D_METHOD("clear_by_mask", "mask"), &BulletManager::clear_by_mask);
 	ClassDB::bind_method(D_METHOD("clear_by_layer", "layer"), &BulletManager::clear_by_layer);
 
