@@ -89,6 +89,7 @@ public:
 
 	void _area_inout(int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape);
 	void _body_inout(int p_status, const RID &p_body, int p_instance, int p_body_shape, int p_area_shape);
+	void _shape_changed();
 
 };
 

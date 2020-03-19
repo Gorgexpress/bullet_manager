@@ -6,6 +6,7 @@
 #include "scene/main/scene_tree.h"
 #include "scene/main/viewport.h"
 
+
 void BulletManagerBullet::set_position(Point2 position) {
 	matrix.set_origin(position);
 }
@@ -188,7 +189,13 @@ bool BulletManagerBulletType::is_rotating_visual() const {
 }
 
 void BulletManagerBulletType::set_collision_shape(const Ref<Shape2D> &p_shape) {
+	if (collision_shape.is_valid()) {
+		collision_shape->disconnect("changed", this, "_shape_changed");
+	}
 	collision_shape = p_shape;
+	if (collision_shape.is_valid()) {
+		collision_shape->connect("changed", this, "_shape_changed");
+	}
 	_change_notify();
 }
 
@@ -261,6 +268,10 @@ void BulletManagerBulletType::_update_cached_rects()  {
 		r_dst_rect.size.x = -r_dst_rect.size.x;
 	if (vflip)
 		r_dst_rect.size.y = -r_dst_rect.size.y;*/
+}
+
+void BulletManagerBulletType::_shape_changed() {
+	update();
 }
 
 void BulletManagerBulletType::_area_inout(int p_status, const RID &p_area, int p_instance, int p_area_shape, int p_self_shape) {
@@ -407,6 +418,7 @@ void BulletManagerBulletType::_bind_methods() {
 	//PHYSICS
 	ClassDB::bind_method(D_METHOD("_body_inout"), &BulletManagerBulletType::_body_inout);
 	ClassDB::bind_method(D_METHOD("_area_inout"), &BulletManagerBulletType::_area_inout);
+	ClassDB::bind_method(D_METHOD("_shape_changed"), &BulletManagerBulletType::_shape_changed);
 	ClassDB::bind_method(D_METHOD("set_collision_shape", "collision_shape"), &BulletManagerBulletType::set_collision_shape);
 	ClassDB::bind_method(D_METHOD("get_collision_shape"), &BulletManagerBulletType::get_collision_shape);
 	ClassDB::bind_method(D_METHOD("set_collision_layer", "collision_layer"), &BulletManagerBulletType::set_collision_layer);
