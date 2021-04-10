@@ -1,4 +1,4 @@
-UPDATE: I have moved away from this approach for efficiently dealing with large amounts of projectiles. It tries to do too much, and does not really fit Godot's scene/node system well. All you really need is something like the tilemap or cpuparticles node, but for STG projectiles. 
+UPDATE: I have moved away from this approach for efficiently dealing with large amounts of projectiles.
 
 # Bullet Manager
 Godot module that adds 2 classes made for dealing with large amounts of 2d projectiles.  
